@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>놀이터 지도</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Google Fonts: Jua -->
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet" />
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #map {
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #header {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      background-color: #FFFBEB;
+      border: 2px dashed #FBBF24;
+      border-radius: 16px;
+      padding: 10px 24px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+      font-family: 'Jua', sans-serif;
+      font-size: 1.5rem;
+      color: #92400E;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="header">🛝 놀이터 지도</div>
+  <div id="map"></div>
+
+  <script>
+    const map = L.map('map').setView([37.5665, 126.978], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+    }).addTo(map);
+  </script>
+
+</body>
+</html>
