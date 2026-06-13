@@ -697,7 +697,7 @@ async function handleSignup() {
   const redirectTo = `${window.location.origin}/auth/callback.html`;
   const { error } = await db.auth.signUp({ email, password, options: { emailRedirectTo: redirectTo, data: { nickname } } });
   if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; return; }
-  okEl.textContent = '📧 이메일을 확인해주세요! 인증 링크를 클릭하면 로그인됩니다.';
+  okEl.innerHTML = '📧 가입 완료! 인증 메일을 보냈어요.<br><span style="font-size:12px;color:#888;">메일이 안 보이면 스팸함을 확인해주세요 🙂</span>';
   okEl.style.display = 'block';
 }
 
