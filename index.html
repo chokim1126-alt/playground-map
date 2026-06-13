@@ -413,6 +413,7 @@ let selectedPG      = null;
 let commentsChannel = null;
 let selectedFiles   = [];
 let isPickingLoc    = false;
+let panelLoading    = false; // 패널 fetch 중 여부
 
 // ═══════════════════════════════════════════════
 // MAP INIT
@@ -474,23 +475,31 @@ function addMarker(pg) {
 // ═══════════════════════════════════════════════
 async function openDetailPanel(pg) {
   selectedPG = pg;
+  panelLoading = true;
   const panel = document.getElementById('detail-panel');
   document.getElementById('detail-content').innerHTML =
     `<div style="display:flex;align-items:center;justify-content:center;height:200px;"><div class="spinner"></div></div>`;
   panel.classList.add('open');
   if (window.innerWidth <= 640) document.getElementById('panel-backdrop').style.display = 'block';
 
-  const { data } = await db
+  const { data, error } = await db
     .from('playgrounds')
     .select('*, profiles(nickname)')
     .eq('id', pg.id)
     .single();
 
-  if (data) {
-    selectedPG = data;
-    renderDetail(data);
-    loadComments(data.id);
+  panelLoading = false;
+
+  if (error || !data) {
+    // fetch 실패 시 기본 데이터로 렌더링
+    renderDetail(pg);
+    loadComments(pg.id);
+    return;
   }
+
+  selectedPG = data;
+  renderDetail(data);
+  loadComments(data.id);
 }
 
 function closePanel() {
@@ -913,7 +922,8 @@ db.auth.onAuthStateChange(async (event, session) => {
 
   updateAuthUI();
 
-  if (selectedPG) {
+  // 패널 fetch 중이면 건드리지 않음 (레이스 컨디션 방지)
+  if (selectedPG && !panelLoading) {
     renderDetail(selectedPG);
     loadComments(selectedPG.id);
   }
