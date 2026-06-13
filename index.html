@@ -21,10 +21,19 @@
       background: rgba(255, 248, 231, 0.93);
       backdrop-filter: blur(8px);
       border-bottom: 3px dashed #FFD60A;
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex; align-items: center; justify-content: center;
       padding: 0 16px;
+      pointer-events: none; /* 헤더 뒤 지도 이벤트 통과 */
     }
-    .app-header h1 { font-family: 'Jua', sans-serif; font-size: 1.4rem; color: #333; }
+    .app-header h1 {
+      font-family: 'Jua', sans-serif; font-size: 1.4rem; color: #333;
+      pointer-events: none;
+    }
+    #auth-status {
+      position: fixed; top: 0; right: 16px; height: 56px;
+      display: flex; align-items: center; z-index: 1001;
+      pointer-events: all; /* 로그인 버튼은 클릭 가능 */
+    }
 
     /* ── Crayon system ── */
     .crayon-btn {
@@ -211,6 +220,9 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* ── Marker ── */
+    .custom-marker { background: none !important; border: none !important; pointer-events: all !important; }
+
     /* ── Misc ── */
     .section-divider { border: none; border-top: 2px dashed #FFD60A; margin: 16px 0; }
     label.check-label {
@@ -230,7 +242,9 @@
 <!-- ════════════ HEADER ════════════ -->
 <header class="app-header">
   <h1>🛝 놀이터 지도</h1>
-  <div id="auth-status"></div>
+  <div id="auth-status">
+    <button class="crayon-btn" style="background:#FF6B35;color:white;" onclick="openAuthModal()">로그인</button>
+  </div>
 </header>
 
 <!-- ════════════ FAB ════════════ -->
@@ -438,10 +452,11 @@ function playgroundIcon() {
       border-radius:50% 50% 50% 0; width:34px; height:34px;
       transform:rotate(-45deg);
       box-shadow:3px 3px 0 rgba(0,0,0,.25);
-      display:flex; align-items:center; justify-content:center;">
-      <span style="transform:rotate(45deg); font-size:15px; line-height:1;">🛝</span>
+      display:flex; align-items:center; justify-content:center;
+      pointer-events:all; cursor:pointer;">
+      <span style="transform:rotate(45deg); font-size:15px; line-height:1; pointer-events:none;">🛝</span>
     </div>`,
-    className: '',
+    className: 'custom-marker',
     iconSize: [34, 34],
     iconAnchor: [17, 34],
     popupAnchor: [0, -36],
@@ -875,7 +890,6 @@ db.auth.onAuthStateChange(async (event, session) => {
 
   updateAuthUI();
 
-  // Re-render open panel to reflect login state
   if (selectedPG) {
     renderDetail(selectedPG);
     loadComments(selectedPG.id);
@@ -886,6 +900,11 @@ db.auth.onAuthStateChange(async (event, session) => {
 // START
 // ═══════════════════════════════════════════════
 initMap();
+
+// 세션 복원 — 새로고침해도 로그인 유지
+db.auth.getSession().then(({ data: { session } }) => {
+  if (!session) updateAuthUI(); // 비로그인 확정 → 로그인 버튼 표시
+});
 </script>
 </body>
 </html>
