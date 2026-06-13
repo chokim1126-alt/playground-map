@@ -442,7 +442,11 @@ function initMap() {
 // PLAYGROUNDS
 // ═══════════════════════════════════════════════
 async function loadPlaygrounds() {
-  const { data } = await db.from('playgrounds').select('*');
+  const { data, error } = await db.from('playgrounds').select('*');
+  if (error) {
+    console.error('놀이터 로드 실패:', error.message);
+    return;
+  }
   (data || []).forEach(addMarker);
 }
 
@@ -655,15 +659,23 @@ async function handleLogin() {
   btn.disabled = true;
 
   try {
-    const { error } = await db.auth.signInWithPassword({ email, password });
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('요청 시간 초과 (10초). 잠시 후 다시 시도해주세요.')), 10000)
+    );
+    const { error } = await Promise.race([
+      db.auth.signInWithPassword({ email, password }),
+      timeout
+    ]);
     if (error) {
-      errEl.textContent = error.message;
+      errEl.textContent = error.message === 'Invalid login credentials'
+        ? '이메일 또는 비밀번호가 올바르지 않습니다.'
+        : error.message;
       errEl.style.display = 'block';
     } else {
       closeAuthModal();
     }
   } catch (e) {
-    errEl.textContent = '오류: ' + e.message;
+    errEl.textContent = e.message;
     errEl.style.display = 'block';
   } finally {
     btn.textContent = '로그인';
@@ -933,11 +945,6 @@ db.auth.onAuthStateChange(async (event, session) => {
 // START
 // ═══════════════════════════════════════════════
 initMap();
-
-// 세션 복원 — 새로고침해도 로그인 유지
-db.auth.getSession().then(({ data: { session } }) => {
-  if (!session) updateAuthUI(); // 비로그인 확정 → 로그인 버튼 표시
-});
 </script>
 </body>
 </html>
