@@ -663,17 +663,20 @@ function closeRegisterModal() {
 // LOCATION PICKER
 // ═══════════════════════════════════════════════
 function startLocationPicker() {
-  closeRegisterModal();
+  // 모달 완전히 숨기기 (display:none으로 지도 클릭 가능하게)
+  document.getElementById('register-modal').classList.add('hidden');
   isPickingLoc = true;
   document.getElementById('location-picker').style.display = 'block';
   map.getContainer().style.cursor = 'crosshair';
+  // Leaflet이 클릭 이벤트를 받을 수 있도록 포커스
+  map.getContainer().focus();
 }
 
 function cancelLocationPicker() {
   isPickingLoc = false;
   document.getElementById('location-picker').style.display = 'none';
   map.getContainer().style.cursor = '';
-  openRegisterModal();
+  document.getElementById('register-modal').classList.remove('hidden');
 }
 
 async function onMapClick(e) {
@@ -682,11 +685,10 @@ async function onMapClick(e) {
   document.getElementById('reg-lat').value = lat;
   document.getElementById('reg-lng').value = lng;
 
-  // Show register modal first (don't wait for geocoding)
   isPickingLoc = false;
   document.getElementById('location-picker').style.display = 'none';
   map.getContainer().style.cursor = '';
-  openRegisterModal();
+  document.getElementById('register-modal').classList.remove('hidden');
   document.getElementById('reg-address').value = '주소 불러오는 중…';
 
   try {
