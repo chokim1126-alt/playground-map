@@ -3,60 +3,807 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>놀이터 지도</title>
+  <title>🛝 놀이터 지도</title>
 
-  <!-- Leaflet CSS -->
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Gothic:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <!-- Google Fonts: Jua -->
-  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet" />
 
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; font-family: 'Nanum Gothic', sans-serif; }
 
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
+    #map { width: 100vw; height: 100vh; }
+
+    /* ── Header ── */
+    .app-header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      height: 56px;
+      background: rgba(255, 248, 231, 0.93);
+      backdrop-filter: blur(8px);
+      border-bottom: 3px dashed #FFD60A;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px;
     }
+    .app-header h1 { font-family: 'Jua', sans-serif; font-size: 1.4rem; color: #333; }
 
-    #map {
-      width: 100vw;
-      height: 100vh;
-    }
-
-    #header {
-      position: absolute;
-      top: 16px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 1000;
-      background-color: #FFFBEB;
-      border: 2px dashed #FBBF24;
-      border-radius: 16px;
-      padding: 10px 24px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    /* ── Crayon system ── */
+    .crayon-btn {
       font-family: 'Jua', sans-serif;
-      font-size: 1.5rem;
-      color: #92400E;
+      border: 2.5px solid #333;
+      border-radius: 50px;
+      box-shadow: 3px 3px 0 #333;
+      transition: transform .1s, box-shadow .1s;
+      cursor: pointer;
+      padding: 7px 18px;
+      font-size: 14px;
+      background: #FFF8E7;
+    }
+    .crayon-btn:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 #333; }
+
+    .crayon-input {
+      font-family: 'Nanum Gothic', sans-serif;
+      border: 2.5px solid #ccc;
+      border-radius: 10px;
+      padding: 8px 12px;
+      width: 100%;
+      font-size: 14px;
+      background: white;
+    }
+    .crayon-input:focus { outline: none; border-color: #FF6B35; box-shadow: 0 0 0 3px rgba(255,107,53,.2); }
+
+    /* ── FAB ── */
+    #fab {
+      position: fixed; bottom: 24px; left: 24px; z-index: 1000;
+      background: #FFD60A;
+      border: 3px solid #333;
+      border-radius: 50%;
+      width: 60px; height: 60px;
+      box-shadow: 4px 4px 0 #333;
+      font-size: 28px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: transform .1s, box-shadow .1s;
+    }
+    #fab:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 #333; }
+
+    /* ── Detail Panel ── */
+    #detail-panel {
+      position: fixed; top: 0; right: 0;
+      height: 100%; width: 380px;
+      background: white;
+      z-index: 999;
+      overflow-y: auto;
+      box-shadow: -4px 0 24px rgba(0,0,0,.12);
+      transform: translateX(110%);
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+    }
+    #detail-panel.open { transform: translateX(0); }
+
+    @media (max-width: 640px) {
+      #detail-panel {
+        width: 100%; top: auto; bottom: 0;
+        height: 78vh;
+        border-radius: 20px 20px 0 0;
+        transform: translateY(110%);
+      }
+      #detail-panel.open { transform: translateY(0); }
+    }
+
+    #panel-backdrop {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.35);
+      z-index: 998;
+    }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.5);
+      z-index: 2000;
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal-box {
+      background: white;
+      border-radius: 16px;
+      border: 3px solid #333;
+      box-shadow: 6px 6px 0 #333;
+      width: 100%;
+      max-width: 440px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    /* ── Tab ── */
+    .tab-btn {
+      padding: 10px 20px;
+      border: none; background: none;
+      font-family: 'Jua', sans-serif; font-size: 16px;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      color: #999;
+    }
+    .tab-btn.active { border-bottom-color: #FF6B35; color: #FF6B35; }
+
+    /* ── Feature tag ── */
+    .feature-tag {
+      font-family: 'Jua', sans-serif; font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 2px solid rgba(0,0,0,.12);
+      display: inline-flex; align-items: center; gap: 3px;
+      margin: 2px;
+    }
+
+    /* ── Gallery ── */
+    .gallery-main { width: 100%; height: 200px; object-fit: cover; display: block; }
+    .gallery-thumb {
+      width: 56px; height: 56px; object-fit: cover;
+      border-radius: 8px; border: 2.5px solid #ddd;
+      cursor: pointer; flex-shrink: 0;
+    }
+    .gallery-thumb.active { border-color: #FF6B35; }
+
+    /* ── Upload preview ── */
+    .upload-preview { position: relative; width: 80px; height: 80px; flex-shrink: 0; }
+    .upload-preview img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 2px solid #ddd; }
+    .upload-preview .rm-btn {
+      position: absolute; top: -6px; right: -6px;
+      background: #E63946; color: white;
+      border: none; border-radius: 50%;
+      width: 20px; height: 20px;
+      font-size: 11px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── Location picker overlay ── */
+    #location-picker {
+      display: none;
+      position: fixed; inset: 0; z-index: 1500;
+    }
+    #location-picker .lp-hint {
+      position: absolute; top: 68px; left: 50%; transform: translateX(-50%);
+      background: rgba(255,248,231,.96);
+      border: 2.5px solid #FFD60A;
+      border-radius: 50px;
+      padding: 10px 24px;
+      font-family: 'Jua', sans-serif; font-size: 15px;
+      box-shadow: 3px 3px 0 rgba(0,0,0,.12);
       white-space: nowrap;
     }
+    #location-picker .lp-cancel {
+      position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+    }
+
+    /* ── Comment ── */
+    .comment-item { padding: 12px 0; border-bottom: 1px solid #f3f3f3; }
+    .comment-item:last-child { border-bottom: none; }
+
+    /* ── Spinner ── */
+    .spinner {
+      width: 22px; height: 22px;
+      border: 3px solid #f0f0f0; border-top-color: #FF6B35;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin: auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Misc ── */
+    .section-divider { border: none; border-top: 2px dashed #FFD60A; margin: 16px 0; }
+    label.check-label {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 13px; cursor: pointer;
+      padding: 5px 10px;
+      border: 2px solid #ddd; border-radius: 20px;
+    }
+    label.check-label:has(input:checked) { border-color: #FF6B35; background: #FFF0EA; }
   </style>
 </head>
 <body>
 
-  <div id="header">🛝 놀이터 지도</div>
-  <div id="map"></div>
+<!-- ════════════ MAP ════════════ -->
+<div id="map"></div>
 
-  <script>
-    const map = L.map('map').setView([37.5665, 126.978], 13);
+<!-- ════════════ HEADER ════════════ -->
+<header class="app-header">
+  <h1>🛝 놀이터 지도</h1>
+  <div id="auth-status"></div>
+</header>
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 19,
-    }).addTo(map);
-  </script>
+<!-- ════════════ FAB ════════════ -->
+<button id="fab" onclick="handleFab()" title="놀이터 등록">+</button>
 
+<!-- ════════════ DETAIL PANEL ════════════ -->
+<div id="panel-backdrop" onclick="closePanel()"></div>
+<div id="detail-panel">
+  <div id="detail-content"></div>
+</div>
+
+<!-- ════════════ AUTH MODAL ════════════ -->
+<div id="auth-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <div>
+        <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">로그인</button>
+        <button class="tab-btn" id="tab-signup" onclick="switchTab('signup')">회원가입</button>
+      </div>
+      <button onclick="closeAuthModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999;">✕</button>
+    </div>
+
+    <!-- Login -->
+    <div id="login-form">
+      <div style="margin-bottom:12px;">
+        <label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px;">이메일</label>
+        <input type="email" id="login-email" class="crayon-input" placeholder="이메일" />
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px;">비밀번호</label>
+        <input type="password" id="login-password" class="crayon-input" placeholder="비밀번호"
+               onkeydown="if(event.key==='Enter')handleLogin()" />
+      </div>
+      <div id="login-err" style="color:#E63946;font-size:13px;margin-bottom:8px;display:none;"></div>
+      <button class="crayon-btn" style="background:#FF6B35;color:white;width:100%;" onclick="handleLogin()">로그인</button>
+    </div>
+
+    <!-- Signup -->
+    <div id="signup-form" style="display:none;">
+      <div style="margin-bottom:12px;">
+        <label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px;">닉네임</label>
+        <input type="text" id="signup-nickname" class="crayon-input" placeholder="닉네임" />
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px;">이메일</label>
+        <input type="email" id="signup-email" class="crayon-input" placeholder="이메일" />
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px;">비밀번호</label>
+        <input type="password" id="signup-password" class="crayon-input" placeholder="6자 이상" />
+      </div>
+      <div id="signup-err" style="color:#E63946;font-size:13px;margin-bottom:8px;display:none;"></div>
+      <div id="signup-ok" style="color:#4CAF50;font-size:13px;margin-bottom:8px;display:none;"></div>
+      <button class="crayon-btn" style="background:#4361EE;color:white;width:100%;" onclick="handleSignup()">회원가입</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ REGISTER MODAL ════════════ -->
+<div id="register-modal" class="modal-overlay hidden">
+  <div class="modal-box" style="max-width:500px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h2 style="font-family:'Jua',sans-serif;font-size:1.2rem;">🛝 놀이터 등록</h2>
+      <button onclick="closeRegisterModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999;">✕</button>
+    </div>
+
+    <!-- Location -->
+    <div style="margin-bottom:12px;">
+      <label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px;">📍 위치</label>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="reg-address" class="crayon-input" placeholder="지도를 클릭해서 선택" readonly style="flex:1;" />
+        <button class="crayon-btn" style="background:#4CAF50;color:white;font-size:12px;padding:7px 12px;white-space:nowrap;" onclick="startLocationPicker()">지도에서 선택</button>
+      </div>
+      <input type="hidden" id="reg-lat" />
+      <input type="hidden" id="reg-lng" />
+    </div>
+
+    <!-- Name -->
+    <div style="margin-bottom:12px;">
+      <label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px;">놀이터 이름</label>
+      <input type="text" id="reg-name" class="crayon-input" placeholder="예: 한강공원 놀이터" />
+    </div>
+
+    <!-- Features -->
+    <div style="margin-bottom:12px;">
+      <label style="font-size:13px;font-weight:700;display:block;margin-bottom:8px;">특징</label>
+      <div id="feature-checks" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+    </div>
+
+    <!-- Images -->
+    <div style="margin-bottom:12px;">
+      <label style="font-size:13px;font-weight:700;display:block;margin-bottom:8px;">사진 (최대 5장)</label>
+      <input type="file" id="reg-images" accept="image/*" multiple style="display:none;" onchange="handleImageSelect(event)" />
+      <div id="image-previews" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;"></div>
+      <button class="crayon-btn" style="font-size:13px;padding:6px 14px;" onclick="document.getElementById('reg-images').click()">📷 사진 추가</button>
+    </div>
+
+    <!-- Description -->
+    <div style="margin-bottom:16px;">
+      <label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px;">설명</label>
+      <textarea id="reg-description" class="crayon-input" rows="3" placeholder="놀이터에 대한 설명을 입력해주세요" style="resize:vertical;"></textarea>
+    </div>
+
+    <div id="reg-err" style="color:#E63946;font-size:13px;margin-bottom:8px;display:none;"></div>
+    <button class="crayon-btn" id="reg-submit-btn" style="background:#FF6B35;color:white;width:100%;" onclick="handleRegister()">등록하기</button>
+  </div>
+</div>
+
+<!-- ════════════ LOCATION PICKER ════════════ -->
+<div id="location-picker">
+  <div class="lp-hint">📍 지도를 클릭해서 위치를 선택하세요</div>
+  <div class="lp-cancel">
+    <button class="crayon-btn" style="background:#E63946;color:white;" onclick="cancelLocationPicker()">취소</button>
+  </div>
+</div>
+
+<!-- ════════════ SCRIPTS ════════════ -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<script>
+// ═══════════════════════════════════════════════
+// CONFIG  ← Supabase 대시보드에서 복사해서 넣으세요
+// ═══════════════════════════════════════════════
+const SUPABASE_URL      = 'https://czxxxudjbevkxcuheygc.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6eHh4dWRqYmV2a3hjdWhleWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNzQzNTMsImV4cCI6MjA5Njc1MDM1M30.c0Bi1V6Lan-DQeWzGhoAzUy5N0QQt1qCjstIbsf0I9E';
+
+const { createClient } = window.supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ═══════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════
+const FEATURES = [
+  { id: 'slide',      label: '🛝 미끄럼틀',  bg: '#FFE4D6', color: '#D84315' },
+  { id: 'swing',      label: '🪀 그네',       bg: '#D6E0FF', color: '#2A3EB1' },
+  { id: 'sandbox',    label: '🏖️ 모래놀이터', bg: '#FFF3CC', color: '#7B5800' },
+  { id: 'toilet',     label: '🚿 화장실',     bg: '#D6F0D6', color: '#1B5E20' },
+  { id: 'parking',    label: '🅿️ 주차',       bg: '#FFD6E7', color: '#880E4F' },
+  { id: 'shade',      label: '🌳 그늘',       bg: '#DCEDC8', color: '#33691E' },
+  { id: 'accessible', label: '♿ 장애인접근', bg: '#E8EAF6', color: '#283593' },
+  { id: 'lighting',   label: '💡 야간조명',   bg: '#FFFDE7', color: '#F57F17' },
+];
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let map             = null;
+let currentUser     = null;
+let currentProfile  = null;
+let selectedPG      = null;
+let commentsChannel = null;
+let selectedFiles   = [];
+let isPickingLoc    = false;
+
+// ═══════════════════════════════════════════════
+// MAP INIT
+// ═══════════════════════════════════════════════
+function initMap() {
+  // Fix Leaflet default icon broken paths (webpack/bundler bug)
+  delete L.Icon.Default.prototype._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+    iconUrl:       'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+    shadowUrl:     'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+  });
+
+  map = L.map('map').setView([37.5665, 126.9780], 13);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19,
+  }).addTo(map);
+
+  map.on('click', onMapClick);
+  loadPlaygrounds();
+}
+
+// ═══════════════════════════════════════════════
+// PLAYGROUNDS
+// ═══════════════════════════════════════════════
+async function loadPlaygrounds() {
+  const { data } = await db.from('playgrounds').select('*');
+  (data || []).forEach(addMarker);
+}
+
+function playgroundIcon() {
+  return L.divIcon({
+    html: `<div style="
+      background:#FFD60A; border:3px solid #333;
+      border-radius:50% 50% 50% 0; width:34px; height:34px;
+      transform:rotate(-45deg);
+      box-shadow:3px 3px 0 rgba(0,0,0,.25);
+      display:flex; align-items:center; justify-content:center;">
+      <span style="transform:rotate(45deg); font-size:15px; line-height:1;">🛝</span>
+    </div>`,
+    className: '',
+    iconSize: [34, 34],
+    iconAnchor: [17, 34],
+    popupAnchor: [0, -36],
+  });
+}
+
+function addMarker(pg) {
+  L.marker([pg.lat, pg.lng], { icon: playgroundIcon() })
+    .addTo(map)
+    .on('click', () => openDetailPanel(pg));
+}
+
+// ═══════════════════════════════════════════════
+// DETAIL PANEL
+// ═══════════════════════════════════════════════
+async function openDetailPanel(pg) {
+  selectedPG = pg;
+  const panel = document.getElementById('detail-panel');
+  document.getElementById('detail-content').innerHTML =
+    `<div style="display:flex;align-items:center;justify-content:center;height:200px;"><div class="spinner"></div></div>`;
+  panel.classList.add('open');
+  if (window.innerWidth <= 640) document.getElementById('panel-backdrop').style.display = 'block';
+
+  const { data } = await db
+    .from('playgrounds')
+    .select('*, profiles(nickname)')
+    .eq('id', pg.id)
+    .single();
+
+  if (data) {
+    selectedPG = data;
+    renderDetail(data);
+    loadComments(data.id);
+  }
+}
+
+function closePanel() {
+  document.getElementById('detail-panel').classList.remove('open');
+  document.getElementById('panel-backdrop').style.display = 'none';
+  if (commentsChannel) { db.removeChannel(commentsChannel); commentsChannel = null; }
+  selectedPG = null;
+}
+
+function renderDetail(pg) {
+  const imgs    = pg.image_urls || [];
+  const feats   = pg.features   || [];
+  const date    = new Date(pg.created_at).toLocaleDateString('ko-KR');
+  const creator = pg.profiles?.nickname || '익명';
+
+  document.getElementById('detail-content').innerHTML = `
+    <button onclick="closePanel()" style="
+      position:absolute;top:10px;right:10px;z-index:10;
+      background:rgba(0,0,0,.08);border:none;border-radius:50%;
+      width:30px;height:30px;font-size:15px;cursor:pointer;color:#555;">✕</button>
+
+    ${imgs.length
+      ? `<img id="main-img" class="gallery-main" src="${imgs[0]}" alt="놀이터 사진" onerror="this.parentElement.remove()"/>
+         ${imgs.length > 1
+           ? `<div style="display:flex;gap:6px;padding:8px 12px;overflow-x:auto;">
+                ${imgs.map((u,i) => `<img src="${u}" class="gallery-thumb${i===0?' active':''}"
+                  onclick="switchImg(this,'${u}')" alt="" onerror="this.remove()"/>`).join('')}
+              </div>`
+           : ''}`
+      : `<div style="height:140px;background:#fafafa;display:flex;align-items:center;justify-content:center;font-size:52px;">🛝</div>`}
+
+    <div style="padding:16px;position:relative;">
+      <h2 style="font-family:'Jua',sans-serif;font-size:1.25rem;margin-bottom:4px;">${pg.name}</h2>
+      <p style="color:#777;font-size:13px;margin-bottom:12px;">📍 ${pg.address}</p>
+
+      ${feats.length ? `<div style="margin-bottom:12px;">${
+        feats.map(fid => {
+          const f = FEATURES.find(x => x.id === fid);
+          return f ? `<span class="feature-tag" style="background:${f.bg};color:${f.color};">${f.label}</span>` : '';
+        }).join('')
+      }</div>` : ''}
+
+      ${pg.description ? `<p style="font-size:14px;line-height:1.65;color:#444;margin-bottom:12px;">${pg.description}</p>` : ''}
+
+      <p style="font-size:12px;color:#aaa;margin-bottom:16px;">등록: ${creator} · ${date}</p>
+
+      <hr class="section-divider" />
+
+      <h3 style="font-family:'Jua',sans-serif;font-size:1rem;margin-bottom:12px;">💬 댓글</h3>
+
+      ${currentUser
+        ? `<div style="display:flex;gap:8px;margin-bottom:12px;">
+             <input type="text" id="comment-input" class="crayon-input" placeholder="댓글 입력…" style="flex:1;"
+                    onkeydown="if(event.key==='Enter')submitComment()" />
+             <button class="crayon-btn" style="background:#FF6B35;color:white;padding:7px 14px;" onclick="submitComment()">등록</button>
+           </div>`
+        : `<div style="padding:12px;background:#f9f9f9;border-radius:10px;text-align:center;font-size:13px;color:#666;margin-bottom:12px;">
+             💬 댓글을 달려면
+             <button onclick="closePanel();openAuthModal()" style="background:none;border:none;color:#FF6B35;font-weight:700;cursor:pointer;font-size:13px;">로그인</button>이 필요해요
+           </div>`}
+
+      <div id="comments-list"><div style="padding:16px 0;"><div class="spinner"></div></div></div>
+    </div>`;
+}
+
+function switchImg(el, url) {
+  document.getElementById('main-img').src = url;
+  document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════
+// COMMENTS
+// ═══════════════════════════════════════════════
+async function loadComments(pgId) {
+  const { data } = await db
+    .from('comments')
+    .select('*, profiles(nickname)')
+    .eq('playground_id', pgId)
+    .order('created_at', { ascending: true });
+  renderComments(data || []);
+
+  if (commentsChannel) db.removeChannel(commentsChannel);
+  commentsChannel = db
+    .channel(`comments:${pgId}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'comments', filter: `playground_id=eq.${pgId}` },
+        () => loadComments(pgId))
+    .subscribe();
+}
+
+function renderComments(list) {
+  const el = document.getElementById('comments-list');
+  if (!el) return;
+  if (!list.length) {
+    el.innerHTML = `<p style="text-align:center;color:#bbb;font-size:13px;padding:16px;">첫 댓글을 남겨보세요!</p>`;
+    return;
+  }
+  el.innerHTML = list.map(c => `
+    <div class="comment-item">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <span style="font-weight:700;font-size:13px;">${c.profiles?.nickname || '익명'}</span>
+          <span style="color:#bbb;font-size:12px;margin-left:8px;">${new Date(c.created_at).toLocaleDateString('ko-KR')}</span>
+        </div>
+        ${currentUser?.id === c.author_id
+          ? `<button onclick="deleteComment('${c.id}')" style="background:none;border:none;color:#ddd;font-size:12px;cursor:pointer;">삭제</button>`
+          : ''}
+      </div>
+      <p style="font-size:14px;margin-top:5px;color:#333;">${c.content}</p>
+    </div>`).join('');
+}
+
+async function submitComment() {
+  if (!currentUser || !selectedPG) return;
+  const input = document.getElementById('comment-input');
+  const content = input.value.trim();
+  if (!content) return;
+  input.value = '';
+  await db.from('comments').insert({ playground_id: selectedPG.id, author_id: currentUser.id, content });
+}
+
+async function deleteComment(id) {
+  await db.from('comments').delete().eq('id', id);
+}
+
+// ═══════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════
+function openAuthModal()  { document.getElementById('auth-modal').classList.remove('hidden'); }
+function closeAuthModal() { document.getElementById('auth-modal').classList.add('hidden'); }
+
+function switchTab(tab) {
+  document.getElementById('login-form').style.display  = tab === 'login'  ? 'block' : 'none';
+  document.getElementById('signup-form').style.display = tab === 'signup' ? 'block' : 'none';
+  document.getElementById('tab-login').classList.toggle('active',  tab === 'login');
+  document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+}
+
+async function handleLogin() {
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl    = document.getElementById('login-err');
+  errEl.style.display = 'none';
+  const { error } = await db.auth.signInWithPassword({ email, password });
+  if (error) { errEl.textContent = '이메일 또는 비밀번호가 올바르지 않습니다.'; errEl.style.display = 'block'; return; }
+  closeAuthModal();
+}
+
+async function handleSignup() {
+  const nickname = document.getElementById('signup-nickname').value.trim();
+  const email    = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-password').value;
+  const errEl    = document.getElementById('signup-err');
+  const okEl     = document.getElementById('signup-ok');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+
+  if (!nickname || !email || !password) { errEl.textContent = '모든 항목을 입력해주세요.'; errEl.style.display = 'block'; return; }
+  if (password.length < 6) { errEl.textContent = '비밀번호는 6자 이상이어야 합니다.'; errEl.style.display = 'block'; return; }
+
+  const redirectTo = `${window.location.origin}/auth/callback.html`;
+  const { error } = await db.auth.signUp({ email, password, options: { emailRedirectTo: redirectTo, data: { nickname } } });
+  if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; return; }
+  okEl.textContent = '📧 이메일을 확인해주세요! 인증 링크를 클릭하면 로그인됩니다.';
+  okEl.style.display = 'block';
+}
+
+function updateAuthUI() {
+  const el = document.getElementById('auth-status');
+  if (currentUser) {
+    const nick    = currentProfile?.nickname || currentUser.email?.split('@')[0] || '사용자';
+    const initial = nick.charAt(0);
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:32px;height:32px;background:#FF6B35;border:2px solid #333;border-radius:50%;
+                    display:flex;align-items:center;justify-content:center;
+                    color:white;font-family:'Jua',sans-serif;font-size:14px;">${initial}</div>
+        <span style="font-family:'Jua',sans-serif;font-size:14px;">${nick}</span>
+        <button class="crayon-btn" style="font-size:12px;padding:4px 12px;" onclick="db.auth.signOut()">로그아웃</button>
+      </div>`;
+  } else {
+    el.innerHTML = `<button class="crayon-btn" style="background:#FF6B35;color:white;" onclick="openAuthModal()">로그인</button>`;
+  }
+}
+
+// ═══════════════════════════════════════════════
+// FAB
+// ═══════════════════════════════════════════════
+function handleFab() {
+  if (currentUser) openRegisterModal();
+  else openAuthModal();
+}
+
+// ═══════════════════════════════════════════════
+// REGISTER
+// ═══════════════════════════════════════════════
+function openRegisterModal() {
+  // Build feature checkboxes
+  document.getElementById('feature-checks').innerHTML = FEATURES.map(f => `
+    <label class="check-label">
+      <input type="checkbox" name="feat" value="${f.id}" style="accent-color:#FF6B35;" />
+      ${f.label}
+    </label>`).join('');
+  document.getElementById('register-modal').classList.remove('hidden');
+}
+
+function closeRegisterModal() {
+  document.getElementById('register-modal').classList.add('hidden');
+  ['reg-name','reg-address','reg-lat','reg-lng','reg-description'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('image-previews').innerHTML = '';
+  document.getElementById('reg-err').style.display = 'none';
+  document.getElementById('reg-submit-btn').textContent = '등록하기';
+  selectedFiles = [];
+}
+
+// ═══════════════════════════════════════════════
+// LOCATION PICKER
+// ═══════════════════════════════════════════════
+function startLocationPicker() {
+  closeRegisterModal();
+  isPickingLoc = true;
+  document.getElementById('location-picker').style.display = 'block';
+  map.getContainer().style.cursor = 'crosshair';
+}
+
+function cancelLocationPicker() {
+  isPickingLoc = false;
+  document.getElementById('location-picker').style.display = 'none';
+  map.getContainer().style.cursor = '';
+  openRegisterModal();
+}
+
+async function onMapClick(e) {
+  if (!isPickingLoc) return;
+  const { lat, lng } = e.latlng;
+  document.getElementById('reg-lat').value = lat;
+  document.getElementById('reg-lng').value = lng;
+
+  // Show register modal first (don't wait for geocoding)
+  isPickingLoc = false;
+  document.getElementById('location-picker').style.display = 'none';
+  map.getContainer().style.cursor = '';
+  openRegisterModal();
+  document.getElementById('reg-address').value = '주소 불러오는 중…';
+
+  try {
+    const res  = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ko`);
+    const data = await res.json();
+    document.getElementById('reg-address').value = data.display_name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+  } catch {
+    document.getElementById('reg-address').value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+  }
+}
+
+// ═══════════════════════════════════════════════
+// IMAGE HANDLING
+// ═══════════════════════════════════════════════
+function handleImageSelect(e) {
+  const toAdd = Array.from(e.target.files).slice(0, 5 - selectedFiles.length);
+  selectedFiles = [...selectedFiles, ...toAdd];
+  renderPreviews();
+  e.target.value = '';
+}
+
+function renderPreviews() {
+  document.getElementById('image-previews').innerHTML = selectedFiles.map((f, i) => {
+    const url = URL.createObjectURL(f);
+    return `<div class="upload-preview">
+      <img src="${url}" alt="미리보기" />
+      <button class="rm-btn" onclick="removeImg(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function removeImg(i) {
+  selectedFiles.splice(i, 1);
+  renderPreviews();
+}
+
+// ═══════════════════════════════════════════════
+// REGISTER SUBMIT
+// ═══════════════════════════════════════════════
+async function handleRegister() {
+  const name    = document.getElementById('reg-name').value.trim();
+  const address = document.getElementById('reg-address').value.trim();
+  const lat     = parseFloat(document.getElementById('reg-lat').value);
+  const lng     = parseFloat(document.getElementById('reg-lng').value);
+  const desc    = document.getElementById('reg-description').value.trim();
+  const errEl   = document.getElementById('reg-err');
+  errEl.style.display = 'none';
+
+  if (!name || !address || isNaN(lat) || isNaN(lng)) {
+    errEl.textContent = '이름과 위치는 필수입니다.'; errEl.style.display = 'block'; return;
+  }
+
+  const features = [...document.querySelectorAll('input[name="feat"]:checked')].map(el => el.value);
+  const btn = document.getElementById('reg-submit-btn');
+  btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;margin:0 auto;"></div>';
+  btn.disabled = true;
+
+  // Upload images
+  const imageUrls = [];
+  for (const file of selectedFiles) {
+    const ext  = file.name.split('.').pop();
+    const path = `${currentUser.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await db.storage.from('playground-images').upload(path, file);
+    if (!error) {
+      const { data: { publicUrl } } = db.storage.from('playground-images').getPublicUrl(path);
+      imageUrls.push(publicUrl);
+    }
+  }
+
+  const { data, error } = await db
+    .from('playgrounds')
+    .insert({ name, address, lat, lng, description: desc, features, image_urls: imageUrls, created_by: currentUser.id })
+    .select().single();
+
+  btn.textContent = '등록하기';
+  btn.disabled = false;
+
+  if (error) { errEl.textContent = '등록 중 오류가 발생했습니다.'; errEl.style.display = 'block'; return; }
+
+  addMarker(data);
+  map.flyTo([lat, lng], 15);
+  closeRegisterModal();
+  openDetailPanel(data);
+}
+
+// ═══════════════════════════════════════════════
+// AUTH STATE LISTENER
+// ═══════════════════════════════════════════════
+db.auth.onAuthStateChange(async (event, session) => {
+  currentUser = session?.user || null;
+
+  if (currentUser) {
+    const { data } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
+    if (data) {
+      currentProfile = data;
+    } else {
+      const nickname = currentUser.user_metadata?.nickname || currentUser.email?.split('@')[0];
+      const { data: created } = await db.from('profiles').insert({ id: currentUser.id, nickname }).select().single();
+      currentProfile = created;
+    }
+  } else {
+    currentProfile = null;
+  }
+
+  updateAuthUI();
+
+  // Re-render open panel to reflect login state
+  if (selectedPG) {
+    renderDetail(selectedPG);
+    loadComments(selectedPG.id);
+  }
+});
+
+// ═══════════════════════════════════════════════
+// START
+// ═══════════════════════════════════════════════
+initMap();
+</script>
 </body>
 </html>
