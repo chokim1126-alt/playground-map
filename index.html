@@ -689,16 +689,32 @@ async function handleSignup() {
   const password = document.getElementById('signup-password').value;
   const errEl    = document.getElementById('signup-err');
   const okEl     = document.getElementById('signup-ok');
+  const btn      = document.querySelector('#signup-form button');
   errEl.style.display = 'none'; okEl.style.display = 'none';
 
   if (!nickname || !email || !password) { errEl.textContent = '모든 항목을 입력해주세요.'; errEl.style.display = 'block'; return; }
   if (password.length < 6) { errEl.textContent = '비밀번호는 6자 이상이어야 합니다.'; errEl.style.display = 'block'; return; }
 
-  const redirectTo = `${window.location.origin}/auth/callback.html`;
-  const { error } = await db.auth.signUp({ email, password, options: { emailRedirectTo: redirectTo, data: { nickname } } });
-  if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; return; }
-  okEl.innerHTML = '📧 가입 완료! 인증 메일을 보냈어요.<br><span style="font-size:12px;color:#888;">메일이 안 보이면 스팸함을 확인해주세요 🙂</span>';
-  okEl.style.display = 'block';
+  btn.textContent = '가입 중...';
+  btn.disabled = true;
+
+  try {
+    const redirectTo = `${window.location.origin}/auth/callback.html`;
+    const { error } = await db.auth.signUp({ email, password, options: { emailRedirectTo: redirectTo, data: { nickname } } });
+    if (error) {
+      errEl.textContent = error.message;
+      errEl.style.display = 'block';
+    } else {
+      okEl.innerHTML = '📧 가입 완료! 인증 메일을 보냈어요.<br><span style="font-size:12px;color:#888;">메일이 안 보이면 스팸함을 확인해주세요 🙂</span>';
+      okEl.style.display = 'block';
+    }
+  } catch(e) {
+    errEl.textContent = '오류: ' + e.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.textContent = '회원가입';
+    btn.disabled = false;
+  }
 }
 
 function updateAuthUI() {
@@ -917,6 +933,10 @@ async function handleRegister() {
 // AUTH STATE LISTENER
 // ═══════════════════════════════════════════════
 db.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'TOKEN_REFRESH_FAILED') {
+    await db.auth.signOut();
+    return;
+  }
   currentUser = session?.user || null;
 
   if (currentUser) {
