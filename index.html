@@ -445,6 +445,7 @@ async function openDetailPanel(pg) {
   const pgData = (error || !data) ? pg : data;
   selectedPG = pgData;
   renderDetail(pgData);
+  document.getElementById('detail-panel').scrollTop = 0;
   loadComments(pgData.id);
 }
 
