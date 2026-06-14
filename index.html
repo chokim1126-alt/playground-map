@@ -17,16 +17,20 @@
     /* ── Header ── */
     .app-header {
       position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-      height: 56px;
+      height: 64px;
       background: rgba(255, 248, 231, 0.93);
       backdrop-filter: blur(8px);
       border-bottom: 3px dashed #FFD60A;
-      display: flex; align-items: center; justify-content: center;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
       padding: 0 16px;
-      pointer-events: none; /* 헤더 뒤 지도 이벤트 통과 */
+      pointer-events: none;
     }
     .app-header h1 {
-      font-family: 'Jua', sans-serif; font-size: 1.4rem; color: #333;
+      font-family: 'Jua', sans-serif; font-size: 1.3rem; color: #333;
+      pointer-events: none;
+    }
+    .app-header p {
+      font-family: 'Nanum Gothic', sans-serif; font-size: 11px; color: #888;
       pointer-events: none;
     }
     /* ── Crayon system ── */
@@ -71,8 +75,8 @@
 
     /* ── Detail Panel ── */
     #detail-panel {
-      position: fixed; top: 56px; right: 0;
-      height: calc(100% - 56px); width: 380px;
+      position: fixed; top: 64px; right: 0;
+      height: calc(100% - 64px); width: 380px;
       background: white;
       z-index: 999;
       overflow-y: auto;
@@ -215,7 +219,7 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ── Zoom control ── */
-    .leaflet-top.leaflet-left { top: 64px; }
+    .leaflet-top.leaflet-left { top: 72px; }
 
     /* ── Marker ── */
     .custom-marker { background: none !important; border: none !important; pointer-events: all !important; }
@@ -239,6 +243,7 @@
 <!-- ════════════ HEADER ════════════ -->
 <header class="app-header">
   <h1>🛝 놀이터 지도</h1>
+  <p>마음껏 뛰어놀 수 있는 놀이터, 같이 공유해요!</p>
 </header>
 
 <!-- ════════════ FAB ════════════ -->
