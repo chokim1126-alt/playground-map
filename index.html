@@ -29,12 +29,6 @@
       font-family: 'Jua', sans-serif; font-size: 1.4rem; color: #333;
       pointer-events: none;
     }
-    #auth-status {
-      position: fixed; top: 0; right: 16px; height: 56px;
-      display: flex; align-items: center; z-index: 1001;
-      pointer-events: all; /* 로그인 버튼은 클릭 가능 */
-    }
-
     /* ── Crayon system ── */
     .crayon-btn {
       font-family: 'Jua', sans-serif;
@@ -242,9 +236,6 @@
 <!-- ════════════ HEADER ════════════ -->
 <header class="app-header">
   <h1>🛝 놀이터 지도</h1>
-  <div id="auth-status">
-    <button class="crayon-btn" style="background:#FF6B35;color:white;" onclick="openAuthModal()">로그인</button>
-  </div>
 </header>
 
 <!-- ════════════ FAB ════════════ -->
@@ -254,53 +245,6 @@
 <div id="panel-backdrop" onclick="closePanel()"></div>
 <div id="detail-panel">
   <div id="detail-content"></div>
-</div>
-
-<!-- ════════════ AUTH MODAL ════════════ -->
-<div id="auth-modal" class="modal-overlay hidden">
-  <div class="modal-box">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-      <div>
-        <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">로그인</button>
-        <button class="tab-btn" id="tab-signup" onclick="switchTab('signup')">회원가입</button>
-      </div>
-      <button onclick="closeAuthModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999;">✕</button>
-    </div>
-
-    <!-- Login -->
-    <div id="login-form">
-      <div style="margin-bottom:12px;">
-        <label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px;">이메일</label>
-        <input type="email" id="login-email" class="crayon-input" placeholder="이메일" />
-      </div>
-      <div style="margin-bottom:16px;">
-        <label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px;">비밀번호</label>
-        <input type="password" id="login-password" class="crayon-input" placeholder="비밀번호"
-               onkeydown="if(event.key==='Enter')handleLogin()" />
-      </div>
-      <div id="login-err" style="color:#E63946;font-size:13px;margin-bottom:8px;display:none;"></div>
-      <button class="crayon-btn" style="background:#FF6B35;color:white;width:100%;" onclick="handleLogin()">로그인</button>
-    </div>
-
-    <!-- Signup -->
-    <div id="signup-form" style="display:none;">
-      <div style="margin-bottom:12px;">
-        <label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px;">닉네임</label>
-        <input type="text" id="signup-nickname" class="crayon-input" placeholder="닉네임" />
-      </div>
-      <div style="margin-bottom:12px;">
-        <label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px;">이메일</label>
-        <input type="email" id="signup-email" class="crayon-input" placeholder="이메일" />
-      </div>
-      <div style="margin-bottom:16px;">
-        <label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px;">비밀번호</label>
-        <input type="password" id="signup-password" class="crayon-input" placeholder="6자 이상" />
-      </div>
-      <div id="signup-err" style="color:#E63946;font-size:13px;margin-bottom:8px;display:none;"></div>
-      <div id="signup-ok" style="display:none;background:#F0FFF4;border:2px solid #4CAF50;border-radius:12px;padding:14px 16px;margin-bottom:8px;text-align:center;"></div>
-      <button class="crayon-btn" style="background:#4361EE;color:white;width:100%;" onclick="handleSignup()">회원가입</button>
-    </div>
-  </div>
 </div>
 
 <!-- ════════════ REGISTER MODAL ════════════ -->
@@ -334,6 +278,12 @@
       </div>
       <input type="hidden" id="reg-lat" />
       <input type="hidden" id="reg-lng" />
+    </div>
+
+    <!-- Nickname -->
+    <div style="margin-bottom:12px;">
+      <label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px;">닉네임</label>
+      <input type="text" id="reg-nickname" class="crayon-input" placeholder="예: 놀이터러버" />
     </div>
 
     <!-- Name -->
@@ -407,14 +357,11 @@ const FEATURES = [
 // STATE
 // ═══════════════════════════════════════════════
 let map             = null;
-let currentUser     = null;
-let currentProfile  = null;
 let selectedPG      = null;
 let commentsChannel = null;
 let selectedFiles   = [];
 let isPickingLoc    = false;
-let panelLoading       = false;
-let playgroundsLoaded  = false;
+let panelLoading    = false;
 
 // ═══════════════════════════════════════════════
 // MAP INIT
@@ -517,7 +464,7 @@ function renderDetail(pg) {
   const imgs    = pg.image_urls || [];
   const feats   = pg.features   || [];
   const date    = new Date(pg.created_at).toLocaleDateString('ko-KR');
-  const creator = pg.profiles?.nickname || '익명';
+  const creator = pg.creator_nickname || '익명';
 
   document.getElementById('detail-content').innerHTML = `
     <button onclick="closePanel()" style="
@@ -554,16 +501,14 @@ function renderDetail(pg) {
 
       <h3 style="font-family:'Jua',sans-serif;font-size:1rem;margin-bottom:12px;">💬 댓글</h3>
 
-      ${currentUser
-        ? `<div style="display:flex;gap:8px;margin-bottom:12px;">
-             <input type="text" id="comment-input" class="crayon-input" placeholder="댓글 입력…" style="flex:1;"
-                    onkeydown="if(event.key==='Enter')submitComment()" />
-             <button class="crayon-btn" style="background:#FF6B35;color:white;padding:7px 14px;" onclick="submitComment()">등록</button>
-           </div>`
-        : `<div style="padding:12px;background:#f9f9f9;border-radius:10px;text-align:center;font-size:13px;color:#666;margin-bottom:12px;">
-             💬 댓글을 달려면
-             <button onclick="closePanel();openAuthModal()" style="background:none;border:none;color:#FF6B35;font-weight:700;cursor:pointer;font-size:13px;">로그인</button>이 필요해요
-           </div>`}
+      <div style="margin-bottom:12px;">
+        <input type="text" id="comment-nickname" class="crayon-input" placeholder="닉네임" style="margin-bottom:6px;" />
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="comment-input" class="crayon-input" placeholder="댓글 입력…" style="flex:1;"
+                 onkeydown="if(event.key==='Enter')submitComment()" />
+          <button class="crayon-btn" style="background:#FF6B35;color:white;padding:7px 14px;" onclick="submitComment()">등록</button>
+        </div>
+      </div>
 
       <div id="comments-list"><div style="padding:16px 0;"><div class="spinner"></div></div></div>
     </div>`;
@@ -581,7 +526,7 @@ function switchImg(el, url) {
 async function loadComments(pgId) {
   const { data } = await db
     .from('comments')
-    .select('*, profiles(nickname)')
+    .select('*')
     .eq('playground_id', pgId)
     .order('created_at', { ascending: true });
   renderComments(data || []);
@@ -605,24 +550,23 @@ function renderComments(list) {
     <div class="comment-item">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;">
         <div>
-          <span style="font-weight:700;font-size:13px;">${c.profiles?.nickname || '익명'}</span>
+          <span style="font-weight:700;font-size:13px;">${c.guest_nickname || '익명'}</span>
           <span style="color:#bbb;font-size:12px;margin-left:8px;">${new Date(c.created_at).toLocaleDateString('ko-KR')}</span>
         </div>
-        ${currentUser?.id === c.author_id
-          ? `<button onclick="deleteComment('${c.id}')" style="background:none;border:none;color:#ddd;font-size:12px;cursor:pointer;">삭제</button>`
-          : ''}
       </div>
       <p style="font-size:14px;margin-top:5px;color:#333;">${c.content}</p>
     </div>`).join('');
 }
 
 async function submitComment() {
-  if (!currentUser || !selectedPG) return;
-  const input = document.getElementById('comment-input');
-  const content = input.value.trim();
+  if (!selectedPG) return;
+  const nickEl  = document.getElementById('comment-nickname');
+  const input   = document.getElementById('comment-input');
+  const nickname = nickEl.value.trim() || '익명';
+  const content  = input.value.trim();
   if (!content) return;
   input.value = '';
-  await db.from('comments').insert({ playground_id: selectedPG.id, author_id: currentUser.id, content });
+  await db.from('comments').insert({ playground_id: selectedPG.id, guest_nickname: nickname, content });
 }
 
 async function deleteComment(id) {
@@ -630,117 +574,10 @@ async function deleteComment(id) {
 }
 
 // ═══════════════════════════════════════════════
-// AUTH
-// ═══════════════════════════════════════════════
-function openAuthModal()  { document.getElementById('auth-modal').classList.remove('hidden'); }
-function closeAuthModal() { document.getElementById('auth-modal').classList.add('hidden'); }
-
-function switchTab(tab) {
-  document.getElementById('login-form').style.display  = tab === 'login'  ? 'block' : 'none';
-  document.getElementById('signup-form').style.display = tab === 'signup' ? 'block' : 'none';
-  document.getElementById('tab-login').classList.toggle('active',  tab === 'login');
-  document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
-}
-
-async function handleLogin() {
-  const email    = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value;
-  const errEl    = document.getElementById('login-err');
-  const btn      = document.querySelector('#login-form button');
-
-  if (!email || !password) {
-    errEl.textContent = '이메일과 비밀번호를 입력해주세요.';
-    errEl.style.display = 'block';
-    return;
-  }
-
-  errEl.style.display = 'none';
-  btn.textContent = '로그인 중...';
-  btn.disabled = true;
-
-  try {
-    const timeout = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('요청 시간 초과 (10초). 잠시 후 다시 시도해주세요.')), 10000)
-    );
-    const { error } = await Promise.race([
-      db.auth.signInWithPassword({ email, password }),
-      timeout
-    ]);
-    if (error) {
-      errEl.textContent = error.message === 'Invalid login credentials'
-        ? '이메일 또는 비밀번호가 올바르지 않습니다.'
-        : error.message;
-      errEl.style.display = 'block';
-    } else {
-      closeAuthModal();
-    }
-  } catch (e) {
-    errEl.textContent = e.message;
-    errEl.style.display = 'block';
-  } finally {
-    btn.textContent = '로그인';
-    btn.disabled = false;
-  }
-}
-
-async function handleSignup() {
-  const nickname = document.getElementById('signup-nickname').value.trim();
-  const email    = document.getElementById('signup-email').value.trim();
-  const password = document.getElementById('signup-password').value;
-  const errEl    = document.getElementById('signup-err');
-  const okEl     = document.getElementById('signup-ok');
-  const btn      = document.querySelector('#signup-form button');
-  errEl.style.display = 'none'; okEl.style.display = 'none';
-
-  if (!nickname || !email || !password) { errEl.textContent = '모든 항목을 입력해주세요.'; errEl.style.display = 'block'; return; }
-  if (password.length < 6) { errEl.textContent = '비밀번호는 6자 이상이어야 합니다.'; errEl.style.display = 'block'; return; }
-
-  btn.textContent = '가입 중...';
-  btn.disabled = true;
-
-  try {
-    const redirectTo = `${window.location.origin}/auth/callback.html`;
-    const { error } = await db.auth.signUp({ email, password, options: { emailRedirectTo: redirectTo, data: { nickname } } });
-    if (error) {
-      errEl.textContent = error.message;
-      errEl.style.display = 'block';
-    } else {
-      okEl.innerHTML = '📧 가입 완료! 인증 메일을 보냈어요.<br><span style="font-size:12px;color:#888;">메일이 안 보이면 스팸함을 확인해주세요 🙂</span>';
-      okEl.style.display = 'block';
-    }
-  } catch(e) {
-    errEl.textContent = '오류: ' + e.message;
-    errEl.style.display = 'block';
-  } finally {
-    btn.textContent = '회원가입';
-    btn.disabled = false;
-  }
-}
-
-function updateAuthUI() {
-  const el = document.getElementById('auth-status');
-  if (currentUser) {
-    const nick    = currentProfile?.nickname || currentUser.email?.split('@')[0] || '사용자';
-    const initial = nick.charAt(0);
-    el.innerHTML = `
-      <div style="display:flex;align-items:center;gap:8px;">
-        <div style="width:32px;height:32px;background:#FF6B35;border:2px solid #333;border-radius:50%;
-                    display:flex;align-items:center;justify-content:center;
-                    color:white;font-family:'Jua',sans-serif;font-size:14px;">${initial}</div>
-        <span style="font-family:'Jua',sans-serif;font-size:14px;">${nick}</span>
-        <button class="crayon-btn" style="font-size:12px;padding:4px 12px;" onclick="db.auth.signOut()">로그아웃</button>
-      </div>`;
-  } else {
-    el.innerHTML = `<button class="crayon-btn" style="background:#FF6B35;color:white;" onclick="openAuthModal()">로그인</button>`;
-  }
-}
-
-// ═══════════════════════════════════════════════
 // FAB
 // ═══════════════════════════════════════════════
 function handleFab() {
-  if (currentUser) openRegisterModal();
-  else openAuthModal();
+  openRegisterModal();
 }
 
 // ═══════════════════════════════════════════════
@@ -758,7 +595,7 @@ function openRegisterModal() {
 
 function closeRegisterModal() {
   document.getElementById('register-modal').classList.add('hidden');
-  ['reg-name','reg-address','reg-lat','reg-lng','reg-description'].forEach(id => {
+  ['reg-nickname','reg-name','reg-address','reg-lat','reg-lng','reg-description'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('image-previews').innerHTML = '';
@@ -884,12 +721,13 @@ function removeImg(i) {
 // REGISTER SUBMIT
 // ═══════════════════════════════════════════════
 async function handleRegister() {
-  const name    = document.getElementById('reg-name').value.trim();
-  const address = document.getElementById('reg-address').value.trim();
-  const lat     = parseFloat(document.getElementById('reg-lat').value);
-  const lng     = parseFloat(document.getElementById('reg-lng').value);
-  const desc    = document.getElementById('reg-description').value.trim();
-  const errEl   = document.getElementById('reg-err');
+  const nickname = document.getElementById('reg-nickname').value.trim() || '익명';
+  const name     = document.getElementById('reg-name').value.trim();
+  const address  = document.getElementById('reg-address').value.trim();
+  const lat      = parseFloat(document.getElementById('reg-lat').value);
+  const lng      = parseFloat(document.getElementById('reg-lng').value);
+  const desc     = document.getElementById('reg-description').value.trim();
+  const errEl    = document.getElementById('reg-err');
   errEl.style.display = 'none';
 
   if (!name || !address || isNaN(lat) || isNaN(lng)) {
@@ -905,7 +743,7 @@ async function handleRegister() {
   const imageUrls = [];
   for (const file of selectedFiles) {
     const ext  = file.name.split('.').pop();
-    const path = `${currentUser.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const path = `guest/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
     const { error } = await db.storage.from('playground-images').upload(path, file);
     if (!error) {
       const { data: { publicUrl } } = db.storage.from('playground-images').getPublicUrl(path);
@@ -915,7 +753,7 @@ async function handleRegister() {
 
   const { data, error } = await db
     .from('playgrounds')
-    .insert({ name, address, lat, lng, description: desc, features, image_urls: imageUrls, created_by: currentUser.id })
+    .insert({ name, address, lat, lng, description: desc, features, image_urls: imageUrls, creator_nickname: nickname })
     .select().single();
 
   btn.textContent = '등록하기';
@@ -929,48 +767,12 @@ async function handleRegister() {
   openDetailPanel(data);
 }
 
-// ═══════════════════════════════════════════════
-// AUTH STATE LISTENER
-// ═══════════════════════════════════════════════
-db.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'TOKEN_REFRESH_FAILED') {
-    await db.auth.signOut();
-    return;
-  }
-  currentUser = session?.user || null;
-
-  if (currentUser) {
-    const { data } = await db.from('profiles').select('*').eq('id', currentUser.id).single();
-    if (data) {
-      currentProfile = data;
-    } else {
-      const nickname = currentUser.user_metadata?.nickname || currentUser.email?.split('@')[0];
-      const { data: created } = await db.from('profiles').insert({ id: currentUser.id, nickname }).select().single();
-      currentProfile = created;
-    }
-  } else {
-    currentProfile = null;
-  }
-
-  updateAuthUI();
-
-  // 인증 정착 후 최초 1회 놀이터 로드
-  if (!playgroundsLoaded) {
-    playgroundsLoaded = true;
-    loadPlaygrounds();
-  }
-
-  // 패널 fetch 중이면 건드리지 않음 (레이스 컨디션 방지)
-  if (selectedPG && !panelLoading) {
-    renderDetail(selectedPG);
-    loadComments(selectedPG.id);
-  }
-});
 
 // ═══════════════════════════════════════════════
 // START
 // ═══════════════════════════════════════════════
 initMap();
+loadPlaygrounds();
 </script>
 </body>
 </html>
