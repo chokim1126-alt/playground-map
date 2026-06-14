@@ -468,7 +468,7 @@ function renderDetail(pg) {
       width:30px;height:30px;font-size:15px;cursor:pointer;color:#555;">✕</button>
 
     ${imgs.length
-      ? `<img id="main-img" class="gallery-main" src="${imgs[0]}" alt="놀이터 사진" onerror="this.parentElement.remove()"/>
+      ? `<img id="main-img" class="gallery-main" src="${imgs[0]}" alt="놀이터 사진" onerror="this.style.display='none'"/>
          ${imgs.length > 1
            ? `<div style="display:flex;gap:6px;padding:8px 12px;overflow-x:auto;">
                 ${imgs.map((u,i) => `<img src="${u}" class="gallery-thumb${i===0?' active':''}"
