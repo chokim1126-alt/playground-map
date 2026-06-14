@@ -413,7 +413,8 @@ let selectedPG      = null;
 let commentsChannel = null;
 let selectedFiles   = [];
 let isPickingLoc    = false;
-let panelLoading    = false; // 패널 fetch 중 여부
+let panelLoading       = false;
+let playgroundsLoaded  = false;
 
 // ═══════════════════════════════════════════════
 // MAP INIT
@@ -435,7 +436,6 @@ function initMap() {
   }).addTo(map);
 
   map.on('click', onMapClick);
-  loadPlaygrounds();
 }
 
 // ═══════════════════════════════════════════════
@@ -953,6 +953,12 @@ db.auth.onAuthStateChange(async (event, session) => {
   }
 
   updateAuthUI();
+
+  // 인증 정착 후 최초 1회 놀이터 로드
+  if (!playgroundsLoaded) {
+    playgroundsLoaded = true;
+    loadPlaygrounds();
+  }
 
   // 패널 fetch 중이면 건드리지 않음 (레이스 컨디션 방지)
   if (selectedPG && !panelLoading) {
