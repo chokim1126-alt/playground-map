@@ -71,8 +71,8 @@
 
     /* ── Detail Panel ── */
     #detail-panel {
-      position: fixed; top: 0; right: 0;
-      height: 100%; width: 380px;
+      position: fixed; top: 56px; right: 0;
+      height: calc(100% - 56px); width: 380px;
       background: white;
       z-index: 999;
       overflow-y: auto;
@@ -213,6 +213,9 @@
       margin: auto;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Zoom control ── */
+    .leaflet-top.leaflet-left { top: 64px; }
 
     /* ── Marker ── */
     .custom-marker { background: none !important; border: none !important; pointer-events: all !important; }
@@ -376,7 +379,8 @@ function initMap() {
     shadowUrl:     'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
   });
 
-  map = L.map('map').setView([37.5665, 126.9780], 13);
+  map = L.map('map', { zoomControl: false }).setView([37.5665, 126.9780], 13);
+  L.control.zoom({ position: 'topleft' }).addTo(map);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
