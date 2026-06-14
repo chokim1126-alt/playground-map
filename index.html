@@ -358,6 +358,7 @@ const FEATURES = [
 // ═══════════════════════════════════════════════
 let map             = null;
 let selectedPG      = null;
+let editingPG       = null;
 let commentsChannel = null;
 let selectedFiles   = [];
 let isPickingLoc    = false;
@@ -445,7 +446,7 @@ async function openDetailPanel(pg) {
   const pgData = (error || !data) ? pg : data;
   selectedPG = pgData;
   renderDetail(pgData);
-  document.getElementById('detail-panel').scrollTop = 0;
+  requestAnimationFrame(() => { document.getElementById('detail-panel').scrollTop = 0; });
   loadComments(pgData.id);
 }
 
@@ -491,7 +492,10 @@ function renderDetail(pg) {
 
       ${pg.description ? `<p style="font-size:14px;line-height:1.65;color:#444;margin-bottom:12px;">${pg.description}</p>` : ''}
 
-      <p style="font-size:12px;color:#aaa;margin-bottom:16px;">등록: ${creator} · ${date}</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <p style="font-size:12px;color:#aaa;">등록: ${creator} · ${date}</p>
+        <button class="crayon-btn" style="font-size:12px;padding:4px 12px;" onclick="openEditModal()">✏️ 수정</button>
+      </div>
 
       <hr class="section-divider" />
 
@@ -580,7 +584,9 @@ function handleFab() {
 // REGISTER
 // ═══════════════════════════════════════════════
 function openRegisterModal() {
-  // Build feature checkboxes
+  editingPG = null;
+  document.querySelector('#register-modal h2').textContent = '🛝 놀이터 등록';
+  document.getElementById('reg-submit-btn').textContent = '등록하기';
   document.getElementById('feature-checks').innerHTML = FEATURES.map(f => `
     <label class="check-label">
       <input type="checkbox" name="feat" value="${f.id}" style="accent-color:#FF6B35;" />
@@ -589,7 +595,28 @@ function openRegisterModal() {
   document.getElementById('register-modal').classList.remove('hidden');
 }
 
+function openEditModal() {
+  if (!selectedPG) return;
+  editingPG = selectedPG;
+  document.querySelector('#register-modal h2').textContent = '✏️ 놀이터 수정';
+  document.getElementById('reg-submit-btn').textContent = '수정 완료';
+  document.getElementById('feature-checks').innerHTML = FEATURES.map(f => `
+    <label class="check-label">
+      <input type="checkbox" name="feat" value="${f.id}" style="accent-color:#FF6B35;"
+             ${(editingPG.features || []).includes(f.id) ? 'checked' : ''} />
+      ${f.label}
+    </label>`).join('');
+  document.getElementById('reg-nickname').value    = editingPG.creator_nickname || '';
+  document.getElementById('reg-name').value        = editingPG.name || '';
+  document.getElementById('reg-address').value     = editingPG.address || '';
+  document.getElementById('reg-lat').value         = editingPG.lat || '';
+  document.getElementById('reg-lng').value         = editingPG.lng || '';
+  document.getElementById('reg-description').value = editingPG.description || '';
+  document.getElementById('register-modal').classList.remove('hidden');
+}
+
 function closeRegisterModal() {
+  editingPG = null;
   document.getElementById('register-modal').classList.add('hidden');
   ['reg-nickname','reg-name','reg-address','reg-lat','reg-lng','reg-description'].forEach(id => {
     document.getElementById(id).value = '';
@@ -736,7 +763,7 @@ async function handleRegister() {
   btn.disabled = true;
 
   // Upload images
-  const imageUrls = [];
+  const imageUrls = editingPG ? [...(editingPG.image_urls || [])] : [];
   for (const file of selectedFiles) {
     const ext  = file.name.split('.').pop();
     const path = `guest/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
@@ -747,20 +774,28 @@ async function handleRegister() {
     }
   }
 
-  const { data, error } = await db
-    .from('playgrounds')
-    .insert({ name, address, lat, lng, description: desc, features, image_urls: imageUrls, creator_nickname: nickname })
-    .select().single();
+  const payload = { name, address, lat, lng, description: desc, features, image_urls: imageUrls, creator_nickname: nickname };
 
-  btn.textContent = '등록하기';
+  let data, error;
+  if (editingPG) {
+    ({ data, error } = await db.from('playgrounds').update(payload).eq('id', editingPG.id).select().single());
+  } else {
+    ({ data, error } = await db.from('playgrounds').insert(payload).select().single());
+  }
+
+  btn.textContent = editingPG ? '수정 완료' : '등록하기';
   btn.disabled = false;
 
-  if (error) { errEl.textContent = '등록 중 오류가 발생했습니다.'; errEl.style.display = 'block'; return; }
+  if (error) { errEl.textContent = editingPG ? '수정 중 오류가 발생했습니다.' : '등록 중 오류가 발생했습니다.'; errEl.style.display = 'block'; return; }
 
-  addMarker(data);
-  map.flyTo([lat, lng], 15);
   closeRegisterModal();
-  openDetailPanel(data);
+  if (editingPG) {
+    openDetailPanel(data);
+  } else {
+    addMarker(data);
+    map.flyTo([lat, lng], 15);
+    openDetailPanel(data);
+  }
 }
 
 
