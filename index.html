@@ -425,11 +425,12 @@ function addMarker(pg) {
 // DETAIL PANEL
 // ═══════════════════════════════════════════════
 async function openDetailPanel(pg) {
+  if (panelLoading) return;
+
   selectedPG = pg;
   panelLoading = true;
+
   const panel = document.getElementById('detail-panel');
-  document.getElementById('detail-content').innerHTML =
-    `<div style="display:flex;align-items:center;justify-content:center;height:200px;"><div class="spinner"></div></div>`;
   panel.classList.add('open');
   if (window.innerWidth <= 640) document.getElementById('panel-backdrop').style.display = 'block';
 
