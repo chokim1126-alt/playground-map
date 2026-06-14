@@ -435,22 +435,16 @@ async function openDetailPanel(pg) {
 
   const { data, error } = await db
     .from('playgrounds')
-    .select('*, profiles(nickname)')
+    .select('*')
     .eq('id', pg.id)
     .single();
 
   panelLoading = false;
 
-  if (error || !data) {
-    // fetch 실패 시 기본 데이터로 렌더링
-    renderDetail(pg);
-    loadComments(pg.id);
-    return;
-  }
-
-  selectedPG = data;
-  renderDetail(data);
-  loadComments(data.id);
+  const pgData = (error || !data) ? pg : data;
+  selectedPG = pgData;
+  renderDetail(pgData);
+  loadComments(pgData.id);
 }
 
 function closePanel() {
