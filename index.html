@@ -509,10 +509,10 @@ function renderDetail(pg) {
       <h3 style="font-family:'Jua',sans-serif;font-size:1rem;margin-bottom:12px;">💬 댓글</h3>
 
       <div style="margin-bottom:12px;">
-        <input type="text" id="comment-nickname" class="crayon-input" placeholder="닉네임" style="margin-bottom:6px;" />
+        <input type="text" id="comment-nickname" class="crayon-input" placeholder="닉네임" style="margin-bottom:6px;" tabindex="-1" />
         <div style="display:flex;gap:8px;">
           <input type="text" id="comment-input" class="crayon-input" placeholder="댓글 입력…" style="flex:1;"
-                 onkeydown="if(event.key==='Enter')submitComment()" />
+                 onkeydown="if(event.key==='Enter')submitComment()" tabindex="-1" />
           <button class="crayon-btn" style="background:#FF6B35;color:white;padding:7px 14px;" onclick="submitComment()">등록</button>
         </div>
       </div>
