@@ -204,6 +204,36 @@
     .addr-result-item:hover { background: #FFF8E7; }
     .addr-result-item:last-child { border-bottom: none; }
 
+    /* ── Search bar ── */
+    #search-bar {
+      position: fixed; top: 72px; left: 50%; transform: translateX(-50%);
+      z-index: 1000; width: 340px; max-width: calc(100vw - 32px);
+    }
+    #search-wrap {
+      display: flex; align-items: center; gap: 8px;
+      background: white; border: 2.5px solid #333; border-radius: 50px;
+      box-shadow: 3px 3px 0 #333; padding: 6px 14px;
+    }
+    #search-input {
+      border: none; outline: none; font-family: 'Nanum Gothic', sans-serif;
+      font-size: 14px; flex: 1; background: transparent;
+    }
+    #search-results {
+      display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+      background: white; border: 2.5px solid #333; border-radius: 16px;
+      box-shadow: 3px 3px 0 #333; max-height: 260px; overflow-y: auto;
+    }
+    .search-result-item {
+      padding: 10px 16px; font-size: 13px; cursor: pointer;
+      border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 8px;
+    }
+    .search-result-item:last-child { border-bottom: none; }
+    .search-result-item:hover { background: #FFF8E7; }
+    .search-result-label {
+      font-size: 10px; font-family: 'Jua', sans-serif;
+      padding: 2px 8px; border-radius: 20px; flex-shrink: 0;
+    }
+
     /* ── Comment ── */
     .comment-item { padding: 12px 0; border-bottom: 1px solid #f3f3f3; }
     .comment-item:last-child { border-bottom: none; }
@@ -245,6 +275,18 @@
   <h1>🛝 놀이터 지도</h1>
   <p>진짜 놀이터를 알려주세요 — 산책코스가 아닌, 마음껏 뛰어놀 수 있는 놀이터!</p>
 </header>
+
+<!-- ════════════ SEARCH BAR ════════════ -->
+<div id="search-bar">
+  <div id="search-wrap">
+    <span style="font-size:16px;">🔍</span>
+    <input id="search-input" type="text" placeholder="놀이터 이름 또는 주소 검색"
+           oninput="onSearchInput()" onkeydown="if(event.key==='Enter')doSearch()"
+           autocomplete="off" />
+    <button onclick="doSearch()" style="background:none;border:none;cursor:pointer;font-family:'Jua',sans-serif;font-size:13px;color:#FF6B35;">검색</button>
+  </div>
+  <div id="search-results"></div>
+</div>
 
 <!-- ════════════ FAB ════════════ -->
 <button id="fab" onclick="handleFab()" title="놀이터 등록">+</button>
@@ -400,11 +442,9 @@ function initMap() {
 // ═══════════════════════════════════════════════
 async function loadPlaygrounds() {
   const { data, error } = await db.from('playgrounds').select('*');
-  if (error) {
-    console.error('놀이터 로드 실패:', error.message);
-    return;
-  }
-  (data || []).forEach(addMarker);
+  if (error) { console.error('놀이터 로드 실패:', error.message); return; }
+  allPlaygrounds = data || [];
+  allPlaygrounds.forEach(addMarker);
 }
 
 function playgroundIcon() {
@@ -797,14 +837,94 @@ async function handleRegister() {
 
   closeRegisterModal();
   if (editingPG) {
+    allPlaygrounds = allPlaygrounds.map(p => p.id === data.id ? data : p);
     openDetailPanel(data);
   } else {
+    allPlaygrounds.push(data);
     addMarker(data);
     map.flyTo([lat, lng], 15);
     openDetailPanel(data);
   }
 }
 
+
+// ═══════════════════════════════════════════════
+// SEARCH
+// ═══════════════════════════════════════════════
+let searchTimer = null;
+let allPlaygrounds = [];
+
+function onSearchInput() {
+  const q = document.getElementById('search-input').value.trim();
+  if (!q) { hideSearchResults(); return; }
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(doSearch, 400);
+}
+
+async function doSearch() {
+  const q = document.getElementById('search-input').value.trim();
+  if (!q) { hideSearchResults(); return; }
+
+  const resultsEl = document.getElementById('search-results');
+  resultsEl.style.display = 'block';
+  resultsEl.innerHTML = '<div class="search-result-item" style="color:#999;">검색 중...</div>';
+
+  // 1. 등록된 놀이터 이름 검색
+  const pgMatches = allPlaygrounds.filter(pg =>
+    pg.name.toLowerCase().includes(q.toLowerCase()) ||
+    pg.address.toLowerCase().includes(q.toLowerCase())
+  );
+
+  let html = '';
+
+  if (pgMatches.length) {
+    html += pgMatches.map(pg => `
+      <div class="search-result-item" onclick="selectPlayground('${pg.id}')">
+        <span class="search-result-label" style="background:#FFF0EA;color:#FF6B35;">놀이터</span>
+        <span>${pg.name} <span style="color:#aaa;font-size:12px;">· ${pg.address.split(',')[0]}</span></span>
+      </div>`).join('');
+  }
+
+  // 2. Nominatim 주소 검색
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=3&accept-language=ko&countrycodes=kr`);
+    const addr = await res.json();
+    if (addr.length) {
+      html += addr.map(item => `
+        <div class="search-result-item" onclick="selectAddress(${item.lat},${item.lon})">
+          <span class="search-result-label" style="background:#EEF2FF;color:#4361EE;">주소</span>
+          <span>${item.display_name.split(',').slice(0,3).join(', ')}</span>
+        </div>`).join('');
+    }
+  } catch {}
+
+  resultsEl.innerHTML = html || '<div class="search-result-item" style="color:#999;">검색 결과가 없어요</div>';
+}
+
+function selectPlayground(id) {
+  hideSearchResults();
+  document.getElementById('search-input').value = '';
+  const pg = allPlaygrounds.find(p => p.id === id);
+  if (!pg) return;
+  map.flyTo([pg.lat, pg.lng], 16);
+  openDetailPanel(pg);
+}
+
+function selectAddress(lat, lng) {
+  hideSearchResults();
+  document.getElementById('search-input').value = '';
+  map.flyTo([parseFloat(lat), parseFloat(lng)], 15);
+}
+
+function hideSearchResults() {
+  const el = document.getElementById('search-results');
+  el.style.display = 'none';
+  el.innerHTML = '';
+}
+
+document.addEventListener('click', e => {
+  if (!document.getElementById('search-bar').contains(e.target)) hideSearchResults();
+});
 
 // ═══════════════════════════════════════════════
 // START
