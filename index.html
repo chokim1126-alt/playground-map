@@ -243,7 +243,7 @@
 <!-- ════════════ HEADER ════════════ -->
 <header class="app-header">
   <h1>🛝 놀이터 지도</h1>
-  <p>진짜 놀이터를 공유해주세요 — 공원 말고, 마음껏 뛰어놀 수 있는 놀이터!</p>
+  <p>진짜 놀이터를 알려주세요 — 산책코스가 아닌, 마음껏 뛰어놀 수 있는 놀이터!</p>
 </header>
 
 <!-- ════════════ FAB ════════════ -->
@@ -455,7 +455,8 @@ async function openDetailPanel(pg) {
   const pgData = (error || !data) ? pg : data;
   selectedPG = pgData;
   renderDetail(pgData);
-  requestAnimationFrame(() => { document.getElementById('detail-panel').scrollTop = 0; });
+  document.getElementById('detail-panel').scrollTop = 0;
+  setTimeout(() => { document.getElementById('detail-panel').scrollTop = 0; }, 50);
   loadComments(pgData.id);
 }
 
