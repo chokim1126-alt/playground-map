@@ -243,7 +243,7 @@
 <!-- ════════════ HEADER ════════════ -->
 <header class="app-header">
   <h1>🛝 놀이터 지도</h1>
-  <p>마음껏 뛰어놀 수 있는 놀이터, 같이 공유해요!</p>
+  <p>진짜 놀이터를 공유해주세요 — 공원 말고, 마음껏 뛰어놀 수 있는 놀이터!</p>
 </header>
 
 <!-- ════════════ FAB ════════════ -->
@@ -501,10 +501,7 @@ function renderDetail(pg) {
 
       ${pg.description ? `<p style="font-size:14px;line-height:1.65;color:#444;margin-bottom:12px;">${pg.description}</p>` : ''}
 
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <p style="font-size:12px;color:#aaa;">등록: ${creator} · ${date}</p>
-        <button class="crayon-btn" style="font-size:12px;padding:4px 12px;" onclick="openEditModal()">✏️ 수정</button>
-      </div>
+      <p style="font-size:12px;color:#aaa;margin-bottom:16px;">등록: ${creator} · ${date}</p>
 
       <hr class="section-divider" />
 
