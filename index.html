@@ -210,13 +210,19 @@
       z-index: 1000; width: 340px; max-width: calc(100vw - 32px);
     }
     #search-wrap {
-      display: flex; align-items: center; gap: 8px;
+      display: flex; align-items: center; gap: 6px;
       background: white; border: 2.5px solid #333; border-radius: 50px;
-      box-shadow: 3px 3px 0 #333; padding: 6px 14px;
+      box-shadow: 3px 3px 0 #333; padding: 6px 12px;
     }
     #search-input {
       border: none; outline: none; font-family: 'Nanum Gothic', sans-serif;
-      font-size: 14px; flex: 1; background: transparent;
+      font-size: 13px; flex: 1; background: transparent; min-width: 0;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    @media (max-width: 640px) {
+      #search-bar { top: 76px; width: calc(100vw - 24px); }
+      #search-input { font-size: 12px; }
+      .app-header p { font-size: 10px; }
     }
     #search-results {
       display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0;
@@ -273,14 +279,14 @@
 <!-- ════════════ HEADER ════════════ -->
 <header class="app-header">
   <h1>🛝 놀이터 지도</h1>
-  <p>진짜 놀이터를 알려주세요 — 산책코스가 아닌, 마음껏 뛰어놀 수 있는 놀이터!</p>
+  <p>산책코스가 아닌, 마음껏 뛰어놀 수 있는 놀이터를 알려주세요!</p>
 </header>
 
 <!-- ════════════ SEARCH BAR ════════════ -->
 <div id="search-bar">
   <div id="search-wrap">
     <span style="font-size:16px;">🔍</span>
-    <input id="search-input" type="text" placeholder="놀이터 이름 또는 주소 검색"
+    <input id="search-input" type="text" placeholder="놀이터 이름 · 주소 검색"
            oninput="onSearchInput()" onkeydown="if(event.key==='Enter')doSearch()"
            autocomplete="off" />
     <button onclick="doSearch()" style="background:none;border:none;cursor:pointer;font-family:'Jua',sans-serif;font-size:13px;color:#FF6B35;">검색</button>
