@@ -664,10 +664,6 @@ async function confirmDelete() {
   if (!confirm(`"${selectedPG.name}" 놀이터를 삭제할까요?\n이 작업은 되돌릴 수 없어요.`)) return;
 
   const pgId = selectedPG.id;
-  // 댓글 먼저 삭제 (외래키 제약)
-  await db.from('comments').delete().eq('playground_id', pgId);
-  const { error: cmtErr } = await db.from('comments').delete().eq('playground_id', pgId);
-  if (cmtErr) { alert('댓글 삭제 중 오류:\n' + cmtErr.message); return; }
   const { error } = await db.from('playgrounds').delete().eq('id', pgId);
   if (error) { alert('삭제 중 오류가 발생했습니다.\n' + error.message); return; }
 
