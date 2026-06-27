@@ -660,11 +660,15 @@ function confirmPwd() {
 }
 
 async function confirmDelete() {
-  if (!selectedPG) return;
+  if (!selectedPG) { alert('[디버그] selectedPG가 없음'); return; }
   if (!confirm(`"${selectedPG.name}" 놀이터를 삭제할까요?\n이 작업은 되돌릴 수 없어요.`)) return;
 
   const pgId = selectedPG.id;
-  const { error } = await db.from('playgrounds').delete().eq('id', pgId);
+  alert('[디버그] 삭제 시도 중\nID: ' + pgId + '\n타입: ' + typeof pgId);
+
+  const { data, error, status, statusText } = await db.from('playgrounds').delete().eq('id', pgId).select();
+  alert('[디버그] 삭제 결과\nstatus: ' + status + ' ' + statusText + '\nerror: ' + JSON.stringify(error) + '\ndata: ' + JSON.stringify(data));
+
   if (error) { alert('삭제 중 오류가 발생했습니다.\n' + error.message); return; }
 
   if (markersMap[pgId]) { markersMap[pgId].remove(); delete markersMap[pgId]; }
