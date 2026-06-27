@@ -23,7 +23,7 @@
       transition: opacity 0.7s ease;
     }
     #splash.hiding { opacity: 0; pointer-events: none; }
-    #splash.gone { display: none; }
+    #splash.gone   { display: none; }
     #splash-count-badge {
       font-family: 'Jua', sans-serif;
       background: #FF6B35; color: white;
@@ -36,7 +36,6 @@
     #splash-count-badge .count-num {
       font-size: 2.4rem; display: block; line-height: 1.1;
     }
-    @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
 
     /* ── Header ── */
     .app-header {
@@ -49,52 +48,33 @@
       padding: 0 16px;
       pointer-events: none;
     }
-    .app-header h1 {
-      font-family: 'Jua', sans-serif; font-size: 1.3rem; color: #333;
-      pointer-events: none;
-    }
-    .app-header p {
-      font-family: 'Nanum Gothic', sans-serif; font-size: 11px; color: #888;
-      pointer-events: none;
-    }
+    .app-header h1 { font-family: 'Jua', sans-serif; font-size: 1.3rem; color: #333; pointer-events: none; }
+    .app-header p  { font-family: 'Nanum Gothic', sans-serif; font-size: 11px; color: #888; pointer-events: none; }
 
     /* ── Crayon system ── */
     .crayon-btn {
       font-family: 'Jua', sans-serif;
-      border: 2.5px solid #333;
-      border-radius: 50px;
+      border: 2.5px solid #333; border-radius: 50px;
       box-shadow: 3px 3px 0 #333;
       transition: transform .1s, box-shadow .1s;
-      cursor: pointer;
-      padding: 7px 18px;
-      font-size: 14px;
+      cursor: pointer; padding: 7px 18px; font-size: 14px;
       background: #FFF8E7;
     }
     .crayon-btn:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 #333; }
-
     .crayon-input {
       font-family: 'Nanum Gothic', sans-serif;
-      border: 2.5px solid #ccc;
-      border-radius: 10px;
-      padding: 8px 12px;
-      width: 100%;
-      font-size: 14px;
-      background: white;
+      border: 2.5px solid #ccc; border-radius: 10px;
+      padding: 8px 12px; width: 100%; font-size: 14px; background: white;
     }
     .crayon-input:focus { outline: none; border-color: #FF6B35; box-shadow: 0 0 0 3px rgba(255,107,53,.2); }
 
     /* ── FAB ── */
     #fab {
       position: fixed; bottom: 24px; left: 24px; z-index: 1000;
-      background: #FFD60A;
-      border: 3px solid #333;
-      border-radius: 50%;
-      width: 60px; height: 60px;
-      box-shadow: 4px 4px 0 #333;
-      font-size: 28px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer;
-      transition: transform .1s, box-shadow .1s;
+      background: #FFD60A; border: 3px solid #333; border-radius: 50%;
+      width: 60px; height: 60px; box-shadow: 4px 4px 0 #333;
+      font-size: 28px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: transform .1s, box-shadow .1s;
     }
     #fab:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 #333; }
 
@@ -102,85 +82,55 @@
     #detail-panel {
       position: fixed; top: 64px; right: 0;
       height: calc(100% - 64px); width: 380px;
-      background: white;
-      z-index: 999;
-      overflow-y: auto;
+      background: white; z-index: 999; overflow-y: auto;
       box-shadow: -4px 0 24px rgba(0,0,0,.12);
       transform: translateX(110%);
       transition: transform .3s cubic-bezier(.34,1.56,.64,1);
     }
     #detail-panel.open { transform: translateX(0); }
-
     @media (max-width: 640px) {
       #detail-panel {
         width: 100%; top: auto; bottom: 0;
-        height: 78vh;
-        border-radius: 20px 20px 0 0;
+        height: 78vh; border-radius: 20px 20px 0 0;
         transform: translateY(110%);
       }
       #detail-panel.open { transform: translateY(0); }
     }
-
     #panel-backdrop {
-      display: none;
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.35);
-      z-index: 998;
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.35); z-index: 998;
     }
 
     /* ── Modal ── */
     .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.5);
-      z-index: 2000;
-      display: flex; align-items: center; justify-content: center;
-      padding: 16px;
+      position: fixed; inset: 0; background: rgba(0,0,0,.5);
+      z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 16px;
     }
     .modal-overlay.hidden { display: none; }
     .modal-box {
-      background: white;
-      border-radius: 16px;
-      border: 3px solid #333;
-      box-shadow: 6px 6px 0 #333;
-      width: 100%;
-      max-width: 440px;
-      max-height: 90vh;
-      overflow-y: auto;
-      padding: 24px;
+      background: white; border-radius: 16px; border: 3px solid #333;
+      box-shadow: 6px 6px 0 #333; width: 100%; max-width: 440px;
+      max-height: 90vh; overflow-y: auto; padding: 24px;
     }
 
     /* ── Password Modal ── */
     #pwd-modal {
       position: fixed; inset: 0; z-index: 2500;
       background: rgba(0,0,0,.55);
-      display: flex; align-items: center; justify-content: center;
-      padding: 16px;
+      display: flex; align-items: center; justify-content: center; padding: 16px;
     }
     #pwd-modal.hidden { display: none; }
-
-    /* ── Tab ── */
-    .tab-btn {
-      padding: 10px 20px;
-      border: none; background: none;
-      font-family: 'Jua', sans-serif; font-size: 16px;
-      cursor: pointer;
-      border-bottom: 3px solid transparent;
-      color: #999;
-    }
-    .tab-btn.active { border-bottom-color: #FF6B35; color: #FF6B35; }
 
     /* ── Feature tag ── */
     .feature-tag {
       font-family: 'Jua', sans-serif; font-size: 12px;
-      padding: 4px 10px;
-      border-radius: 20px;
+      padding: 4px 10px; border-radius: 20px;
       border: 2px solid rgba(0,0,0,.12);
-      display: inline-flex; align-items: center; gap: 3px;
-      margin: 2px;
+      display: inline-flex; align-items: center; gap: 3px; margin: 2px;
     }
 
     /* ── Gallery ── */
-    .gallery-main { width: 100%; height: 200px; object-fit: cover; display: block; }
+    .gallery-main  { width: 100%; height: 200px; object-fit: cover; display: block; }
     .gallery-thumb {
       width: 56px; height: 56px; object-fit: cover;
       border-radius: 8px; border: 2.5px solid #ddd;
@@ -193,48 +143,31 @@
     .upload-preview img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 2px solid #ddd; }
     .upload-preview .rm-btn {
       position: absolute; top: -6px; right: -6px;
-      background: #E63946; color: white;
-      border: none; border-radius: 50%;
-      width: 20px; height: 20px;
-      font-size: 11px; cursor: pointer;
+      background: #E63946; color: white; border: none; border-radius: 50%;
+      width: 20px; height: 20px; font-size: 11px; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
     }
 
-    /* ── Location picker overlay ── */
-    #location-picker {
-      display: none;
-      position: fixed; inset: 0; z-index: 1500;
-      pointer-events: none;
-    }
+    /* ── Location picker ── */
+    #location-picker { display: none; position: fixed; inset: 0; z-index: 1500; pointer-events: none; }
     #location-picker .lp-hint {
       position: absolute; top: 68px; left: 50%; transform: translateX(-50%);
-      background: rgba(255,248,231,.96);
-      border: 2.5px solid #FFD60A;
-      border-radius: 50px;
-      padding: 10px 24px;
-      font-family: 'Jua', sans-serif; font-size: 15px;
-      box-shadow: 3px 3px 0 rgba(0,0,0,.12);
-      white-space: nowrap;
-      pointer-events: none;
+      background: rgba(255,248,231,.96); border: 2.5px solid #FFD60A; border-radius: 50px;
+      padding: 10px 24px; font-family: 'Jua', sans-serif; font-size: 15px;
+      box-shadow: 3px 3px 0 rgba(0,0,0,.12); white-space: nowrap; pointer-events: none;
     }
     #location-picker .lp-cancel {
-      position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
-      pointer-events: all;
+      position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%); pointer-events: all;
     }
 
     /* ── Address search dropdown ── */
     #addr-search-results {
       position: absolute; left: 0; right: 0; top: 100%;
       background: white; border: 2px solid #ddd; border-top: none;
-      border-radius: 0 0 10px 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,.1);
-      z-index: 10; max-height: 200px; overflow-y: auto;
-      display: none;
+      border-radius: 0 0 10px 10px; box-shadow: 0 4px 12px rgba(0,0,0,.1);
+      z-index: 10; max-height: 200px; overflow-y: auto; display: none;
     }
-    .addr-result-item {
-      padding: 10px 12px; font-size: 13px; cursor: pointer;
-      border-bottom: 1px solid #f0f0f0;
-    }
+    .addr-result-item { padding: 10px 12px; font-size: 13px; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
     .addr-result-item:hover { background: #FFF8E7; }
     .addr-result-item:last-child { border-bottom: none; }
 
@@ -251,7 +184,6 @@
     #search-input {
       border: none; outline: none; font-family: 'Nanum Gothic', sans-serif;
       font-size: 13px; flex: 1; background: transparent; min-width: 0;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     #search-results {
       display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0;
@@ -270,45 +202,35 @@
     }
 
     /* ── Mobile search toggle ── */
-    #search-toggle {
-      display: none;
-    }
+    #search-toggle { display: none; }
     @media (max-width: 640px) {
       #search-bar {
-        display: none;
-        top: 116px; left: 12px; right: 12px;
-        width: auto; transform: none;
-        max-width: none;
+        display: none; top: 116px; left: 12px; right: 12px;
+        width: auto; transform: none; max-width: none;
       }
       #search-bar.mobile-open { display: block; }
       #search-wrap { padding: 10px 16px; }
-      #search-input { font-size: 16px; } /* 16px 미만이면 iOS가 자동 확대 */
+      #search-input { font-size: 16px; }
       #search-results { max-height: 320px; border-radius: 20px; }
       #search-toggle {
-        display: flex;
-        position: fixed; top: 72px; right: 16px; z-index: 1001;
+        display: flex; position: fixed; top: 72px; right: 16px; z-index: 1001;
         width: 36px; height: 36px;
         background: white; border: 2.5px solid #333; border-radius: 50%;
-        box-shadow: 2px 2px 0 #333;
-        align-items: center; justify-content: center;
+        box-shadow: 2px 2px 0 #333; align-items: center; justify-content: center;
         cursor: pointer; font-size: 17px;
-        touch-action: manipulation; /* 더블탭 확대 방지 */
-        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation; -webkit-tap-highlight-color: transparent;
       }
       .app-header p { font-size: 10px; }
     }
 
-    /* ── Comment ── */
+    /* ── Comments ── */
     .comment-item { padding: 12px 0; border-bottom: 1px solid #f3f3f3; }
     .comment-item:last-child { border-bottom: none; }
 
     /* ── Spinner ── */
     .spinner {
-      width: 22px; height: 22px;
-      border: 3px solid #f0f0f0; border-top-color: #FF6B35;
-      border-radius: 50%;
-      animation: spin .8s linear infinite;
-      margin: auto;
+      width: 22px; height: 22px; border: 3px solid #f0f0f0; border-top-color: #FF6B35;
+      border-radius: 50%; animation: spin .8s linear infinite; margin: auto;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -321,10 +243,8 @@
     /* ── Misc ── */
     .section-divider { border: none; border-top: 2px dashed #FFD60A; margin: 16px 0; }
     label.check-label {
-      display: flex; align-items: center; gap: 5px;
-      font-size: 13px; cursor: pointer;
-      padding: 5px 10px;
-      border: 2px solid #ddd; border-radius: 20px;
+      display: flex; align-items: center; gap: 5px; font-size: 13px; cursor: pointer;
+      padding: 5px 10px; border: 2px solid #ddd; border-radius: 20px;
     }
     label.check-label:has(input:checked) { border-color: #FF6B35; background: #FFF0EA; }
   </style>
@@ -333,7 +253,9 @@
 
 <!-- ════════════ SPLASH ════════════ -->
 <div id="splash">
-  <img src="logo.png" alt="재채기 로고" style="width:80px;height:80px;object-fit:contain;mix-blend-mode:multiply;" onerror="this.style.display='none'" />
+  <img src="logo.png" alt="재채기 로고"
+       style="width:80px;height:80px;object-fit:contain;mix-blend-mode:multiply;"
+       onerror="this.style.display='none'" />
   <div id="splash-count-badge">
     <span class="count-num"><span id="splash-count-num">0</span>개의 놀이터가</span>
     등록되어 있어요! 🎉
@@ -369,7 +291,7 @@
 <button id="search-toggle" onclick="toggleMobileSearch()" title="검색">🔍</button>
 
 <!-- ════════════ FAB ════════════ -->
-<button id="fab" onclick="handleFab()" title="놀이터 등록">+</button>
+<button id="fab" onclick="openRegisterModal()" title="놀이터 등록">+</button>
 
 <!-- ════════════ DETAIL PANEL ════════════ -->
 <div id="panel-backdrop" onclick="closePanel()"></div>
@@ -381,15 +303,14 @@
 <div id="register-modal" class="modal-overlay hidden">
   <div class="modal-box" style="max-width:500px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <h2 style="font-family:'Jua',sans-serif;font-size:1.2rem;">🛝 놀이터 등록</h2>
+      <h2 id="reg-modal-title" style="font-family:'Jua',sans-serif;font-size:1.2rem;">🛝 놀이터 등록</h2>
       <button onclick="closeRegisterModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999;">✕</button>
     </div>
 
     <!-- Location -->
     <div style="margin-bottom:12px;">
       <label style="font-size:13px;font-weight:700;display:block;margin-bottom:8px;">📍 위치</label>
-
-      <div style="position:relative; margin-bottom:8px;">
+      <div style="position:relative;margin-bottom:8px;">
         <div style="display:flex;gap:8px;">
           <input type="text" id="addr-search-input" class="crayon-input"
                  placeholder="주소 검색 (예: 서울 마포구 놀이터)"
@@ -399,7 +320,6 @@
         </div>
         <div id="addr-search-results"></div>
       </div>
-
       <div style="display:flex;gap:8px;align-items:center;">
         <input type="text" id="reg-address" class="crayon-input" placeholder="선택된 위치가 여기에 표시돼요" readonly style="flex:1;font-size:12px;color:#666;" />
         <button class="crayon-btn" style="background:#4CAF50;color:white;font-size:12px;padding:7px 12px;white-space:nowrap;" onclick="startLocationPicker()">🗺️ 지도에서 선택</button>
@@ -414,10 +334,10 @@
       <input type="text" id="reg-nickname" class="crayon-input" placeholder="예: 놀이터러버" />
     </div>
 
-    <!-- Password -->
+    <!-- Password (등록 시만 표시) -->
     <div style="margin-bottom:12px;" id="pwd-field-wrap">
       <label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px;">🔒 수정 비밀번호 <span style="font-weight:400;color:#aaa;">(숫자 4자리)</span></label>
-      <input type="password" id="reg-password" class="crayon-input" maxlength="4" inputmode="numeric" placeholder="나중에 수정할 때 필요해요" />
+      <input type="password" id="reg-password" class="crayon-input" maxlength="4" inputmode="numeric" placeholder="나중에 수정·삭제할 때 필요해요" />
     </div>
 
     <!-- Name -->
@@ -451,18 +371,17 @@
   </div>
 </div>
 
-<!-- ════════════ PASSWORD CHECK MODAL ════════════ -->
+<!-- ════════════ PASSWORD MODAL ════════════ -->
 <div id="pwd-modal" class="hidden">
   <div class="modal-box" style="max-width:320px;">
-    <h2 style="font-family:'Jua',sans-serif;font-size:1.1rem;margin-bottom:12px;">🔒 수정 비밀번호 확인</h2>
+    <h2 id="pwd-modal-title" style="font-family:'Jua',sans-serif;font-size:1.1rem;margin-bottom:12px;">🔒 비밀번호 확인</h2>
     <p style="font-size:13px;color:#666;margin-bottom:14px;">등록 시 설정한 숫자 4자리를 입력해주세요.</p>
     <input type="password" id="pwd-input" class="crayon-input" maxlength="4" inputmode="numeric"
-           placeholder="숫자 4자리"
-           onkeydown="if(event.key==='Enter')confirmEdit()" style="margin-bottom:10px;" />
+           placeholder="숫자 4자리" onkeydown="if(event.key==='Enter')confirmPwd()" style="margin-bottom:10px;" />
     <div id="pwd-err" style="color:#E63946;font-size:13px;margin-bottom:10px;display:none;">비밀번호가 맞지 않아요.</div>
     <div style="display:flex;gap:8px;">
       <button class="crayon-btn" style="flex:1;" onclick="closePwdModal()">취소</button>
-      <button class="crayon-btn" style="flex:1;background:#FF6B35;color:white;" onclick="confirmEdit()">확인</button>
+      <button class="crayon-btn" style="flex:1;background:#FF6B35;color:white;" onclick="confirmPwd()">확인</button>
     </div>
   </div>
 </div>
@@ -485,31 +404,32 @@
 // ═══════════════════════════════════════════════
 const SUPABASE_URL      = 'https://czxxxudjbevkxcuheygc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6eHh4dWRqYmV2a3hjdWhleWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNzQzNTMsImV4cCI6MjA5Njc1MDM1M30.c0Bi1V6Lan-DQeWzGhoAzUy5N0QQt1qCjstIbsf0I9E';
-
 const { createClient } = window.supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// XSS 방지
 function esc(str) {
-  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  return String(str || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-// 이미지 로드 실패 시 — alt 텍스트 대신 이모지 플레이스홀더로 교체
+// 이미지 로드 실패 → 🛝 플레이스홀더
 window.imgErr = function(el) {
   el.onerror = null;
   el.alt = '';
+  const isThumb = el.classList.contains('gallery-thumb');
+  const size    = isThumb ? '56px' : '200px';
   el.style.display = 'none';
   const wrap = el.parentElement;
   if (wrap && !wrap.querySelector('.img-fallback')) {
     const fb = document.createElement('div');
     fb.className = 'img-fallback';
-    fb.style.cssText = 'display:flex;align-items:center;justify-content:center;background:#fafafa;font-size:48px;';
-    fb.style.width = el.style.width || '100%';
-    fb.style.height = el.style.height || '200px';
+    fb.style.cssText = `display:flex;align-items:center;justify-content:center;background:#fafafa;font-size:${isThumb ? '24' : '48'}px;width:${size};height:${size};border-radius:${isThumb ? '8px' : '0'};flex-shrink:0;`;
     fb.textContent = '🛝';
     wrap.insertBefore(fb, el);
   }
 };
-
-const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ═══════════════════════════════════════════════
 // CONSTANTS
@@ -536,38 +456,30 @@ let selectedFiles   = [];
 let isPickingLoc    = false;
 let panelLoading    = false;
 let allPlaygrounds  = [];
-const markersMap    = {}; // id → Leaflet marker (삭제 시 지도에서 제거용)
+let pendingAction   = 'edit'; // 'edit' | 'delete'
+const markersMap    = {};     // id → Leaflet marker
 
 // ═══════════════════════════════════════════════
 // SPLASH
 // ═══════════════════════════════════════════════
 async function showSplash() {
-  const splash = document.getElementById('splash');
-  const numEl  = document.getElementById('splash-count-num');
-
+  const numEl = document.getElementById('splash-count-num');
   try {
     const { count } = await db.from('playgrounds').select('*', { count: 'exact', head: true });
     const target = count || 0;
-
-    // 슬롯머신처럼 숫자가 올라가는 애니메이션
-    const duration = 1400;
-    const steps    = 40;
-    const delay    = duration / steps;
-    let   step     = 0;
+    const steps = 40;
+    const delay = 1400 / steps;
+    let step = 0;
     const timer = setInterval(() => {
       step++;
-      const progress = step / steps;
-      // easeOut 곡선으로 처음엔 빠르게, 끝에서 천천히 멈춤
-      const eased = 1 - Math.pow(1 - progress, 3);
+      const eased = 1 - Math.pow(1 - step / steps, 3);
       numEl.textContent = Math.round(eased * target);
-      if (step >= steps) {
-        clearInterval(timer);
-        numEl.textContent = target;
-      }
+      if (step >= steps) { clearInterval(timer); numEl.textContent = target; }
     }, delay);
   } catch {}
 
   setTimeout(() => {
+    const splash = document.getElementById('splash');
     splash.classList.add('hiding');
     setTimeout(() => splash.classList.add('gone'), 700);
   }, 3200);
@@ -583,15 +495,12 @@ function initMap() {
     iconUrl:       'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
     shadowUrl:     'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
   });
-
   map = L.map('map', { zoomControl: false }).setView([37.5665, 126.9780], 13);
   L.control.zoom({ position: 'topleft' }).addTo(map);
-
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 19,
   }).addTo(map);
-
   map.on('click', onMapClick);
 }
 
@@ -607,26 +516,18 @@ async function loadPlaygrounds() {
 
 function playgroundIcon() {
   return L.divIcon({
-    html: `<div style="
-      background:#FFD60A; border:3px solid #333;
-      border-radius:50% 50% 50% 0; width:34px; height:34px;
-      transform:rotate(-45deg);
-      box-shadow:3px 3px 0 rgba(0,0,0,.25);
-      display:flex; align-items:center; justify-content:center;
-      pointer-events:all; cursor:pointer;">
-      <span style="transform:rotate(45deg); font-size:15px; line-height:1; pointer-events:none;">🛝</span>
+    html: `<div style="background:#FFD60A;border:3px solid #333;border-radius:50% 50% 50% 0;
+      width:34px;height:34px;transform:rotate(-45deg);box-shadow:3px 3px 0 rgba(0,0,0,.25);
+      display:flex;align-items:center;justify-content:center;pointer-events:all;cursor:pointer;">
+      <span style="transform:rotate(45deg);font-size:15px;line-height:1;pointer-events:none;">🛝</span>
     </div>`,
-    className: 'custom-marker',
-    iconSize: [34, 34],
-    iconAnchor: [17, 34],
-    popupAnchor: [0, -36],
+    className: 'custom-marker', iconSize: [34,34], iconAnchor: [17,34], popupAnchor: [0,-36],
   });
 }
 
 function addMarker(pg) {
   const m = L.marker([pg.lat, pg.lng], { icon: playgroundIcon() })
-    .addTo(map)
-    .on('click', () => openDetailPanel(pg));
+    .addTo(map).on('click', () => openDetailPanel(pg));
   markersMap[pg.id] = m;
 }
 
@@ -635,28 +536,24 @@ function addMarker(pg) {
 // ═══════════════════════════════════════════════
 async function openDetailPanel(pg) {
   if (panelLoading) return;
-
-  selectedPG = pg;
+  selectedPG   = pg;
   panelLoading = true;
 
   const panel = document.getElementById('detail-panel');
   panel.classList.add('open');
   if (window.innerWidth <= 640) document.getElementById('panel-backdrop').style.display = 'block';
 
-  const { data, error } = await db
-    .from('playgrounds')
-    .select('*')
-    .eq('id', pg.id)
-    .single();
-
-  panelLoading = false;
-
-  const pgData = (error || !data) ? pg : data;
-  selectedPG = pgData;
-  renderDetail(pgData);
-  document.getElementById('detail-panel').scrollTop = 0;
-  setTimeout(() => { document.getElementById('detail-panel').scrollTop = 0; }, 50);
-  loadComments(pgData.id);
+  try {
+    const { data, error } = await db.from('playgrounds').select('*').eq('id', pg.id).single();
+    const pgData = (error || !data) ? pg : data;
+    selectedPG = pgData;
+    renderDetail(pgData);
+    panel.scrollTop = 0;
+    setTimeout(() => { panel.scrollTop = 0; }, 50);
+    loadComments(pgData.id);
+  } finally {
+    panelLoading = false;
+  }
 }
 
 function closePanel() {
@@ -667,28 +564,24 @@ function closePanel() {
 }
 
 function renderDetail(pg) {
-  const imgs    = pg.image_urls || [];
-  const feats   = pg.features   || [];
-  const date    = new Date(pg.created_at).toLocaleDateString('ko-KR');
-  const creator = esc(pg.creator_nickname || '익명');
+  const imgs        = pg.image_urls || [];
+  const feats       = pg.features   || [];
+  const date        = new Date(pg.created_at).toLocaleDateString('ko-KR');
+  const creator     = esc(pg.creator_nickname || '익명');
   const hasPassword = !!pg.password;
 
   document.getElementById('detail-content').innerHTML = `
-    <button onclick="closePanel()" style="
-      position:absolute;top:10px;right:10px;z-index:10;
+    <button onclick="closePanel()" style="position:absolute;top:10px;right:10px;z-index:10;
       background:rgba(0,0,0,.08);border:none;border-radius:50%;
       width:30px;height:30px;font-size:15px;cursor:pointer;color:#555;">✕</button>
 
     ${imgs.length
-      ? `<img id="main-img" class="gallery-main" src="${imgs[0]}" alt=""
-             onerror="imgErr(this)" loading="eager" />
+      ? `<img id="main-img" class="gallery-main" src="${imgs[0]}" alt="" onerror="imgErr(this)" loading="eager" />
          ${imgs.length > 1
            ? `<div style="display:flex;gap:6px;padding:8px 12px;overflow-x:auto;">
                 ${imgs.map((u,i) => `<img src="${u}" class="gallery-thumb${i===0?' active':''}"
-                  onclick="switchImg(this,'${u}')" alt=""
-                  onerror="imgErr(this)" loading="eager" />`).join('')}
-              </div>`
-           : ''}`
+                  onclick="switchImg(this,'${u}')" alt="" onerror="imgErr(this)" loading="eager" />`).join('')}
+              </div>` : ''}`
       : `<div style="height:140px;background:#fafafa;display:flex;align-items:center;justify-content:center;font-size:52px;">🛝</div>`}
 
     <div style="padding:16px;position:relative;">
@@ -704,21 +597,19 @@ function renderDetail(pg) {
 
       ${pg.description ? `<p style="font-size:14px;line-height:1.65;color:#444;margin-bottom:12px;">${esc(pg.description)}</p>` : ''}
 
-      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <p style="font-size:12px;color:#aaa;">등록: ${creator} · ${date}</p>
-        ${hasPassword
-          ? `<div style="display:flex;gap:6px;">
-               <button style="font-family:'Jua',sans-serif;font-size:11px;padding:4px 10px;
-                 border:2px solid #4361EE;border-radius:20px;background:white;color:#4361EE;
-                 cursor:pointer;" onclick="checkPasswordAndAct('edit')">✏️ 수정</button>
-               <button style="font-family:'Jua',sans-serif;font-size:11px;padding:4px 10px;
-                 border:2px solid #E63946;border-radius:20px;background:white;color:#E63946;
-                 cursor:pointer;" onclick="checkPasswordAndAct('delete')">🗑️ 삭제</button>
-             </div>`
-          : ''}</div>
+        ${hasPassword ? `<div style="display:flex;gap:6px;">
+          <button style="font-family:'Jua',sans-serif;font-size:11px;padding:4px 10px;
+            border:2px solid #4361EE;border-radius:20px;background:white;color:#4361EE;cursor:pointer;"
+            onclick="checkPasswordAndAct('edit')">✏️ 수정</button>
+          <button style="font-family:'Jua',sans-serif;font-size:11px;padding:4px 10px;
+            border:2px solid #E63946;border-radius:20px;background:white;color:#E63946;cursor:pointer;"
+            onclick="checkPasswordAndAct('delete')">🗑️ 삭제</button>
+        </div>` : ''}
+      </div>
 
       <hr class="section-divider" />
-
       <h3 style="font-family:'Jua',sans-serif;font-size:1rem;margin-bottom:12px;">💬 댓글</h3>
 
       <div style="margin-bottom:12px;">
@@ -729,7 +620,6 @@ function renderDetail(pg) {
           <button class="crayon-btn" style="background:#FF6B35;color:white;padding:7px 14px;" onclick="submitComment()">등록</button>
         </div>
       </div>
-
       <div id="comments-list"><div style="padding:16px 0;"><div class="spinner"></div></div></div>
     </div>`;
 }
@@ -741,13 +631,13 @@ function switchImg(el, url) {
 }
 
 // ═══════════════════════════════════════════════
-// PASSWORD CHECK FOR EDIT
+// PASSWORD CHECK
 // ═══════════════════════════════════════════════
-let pendingAction = 'edit'; // 'edit' | 'delete'
-
 function checkPasswordAndAct(action) {
   if (!selectedPG || !selectedPG.password) return;
   pendingAction = action;
+  document.getElementById('pwd-modal-title').textContent =
+    action === 'delete' ? '🗑️ 삭제 확인' : '✏️ 수정 확인';
   document.getElementById('pwd-input').value = '';
   document.getElementById('pwd-err').style.display = 'none';
   document.getElementById('pwd-modal').classList.remove('hidden');
@@ -758,18 +648,15 @@ function closePwdModal() {
   document.getElementById('pwd-modal').classList.add('hidden');
 }
 
-function confirmEdit() {
+function confirmPwd() {
   const entered = document.getElementById('pwd-input').value.trim();
-  if (entered === String(selectedPG.password)) {
-    closePwdModal();
-    if (pendingAction === 'delete') {
-      confirmDelete();
-    } else {
-      openEditModal();
-    }
-  } else {
+  if (entered !== String(selectedPG.password)) {
     document.getElementById('pwd-err').style.display = 'block';
+    return;
   }
+  closePwdModal();
+  if (pendingAction === 'delete') confirmDelete();
+  else openEditModal();
 }
 
 async function confirmDelete() {
@@ -777,10 +664,11 @@ async function confirmDelete() {
   if (!confirm(`"${selectedPG.name}" 놀이터를 삭제할까요?\n이 작업은 되돌릴 수 없어요.`)) return;
 
   const pgId = selectedPG.id;
+  // 댓글 먼저 삭제 (외래키 제약)
+  await db.from('comments').delete().eq('playground_id', pgId);
   const { error } = await db.from('playgrounds').delete().eq('id', pgId);
   if (error) { alert('삭제 중 오류가 발생했습니다.\n' + error.message); return; }
 
-  // 지도 마커 제거
   if (markersMap[pgId]) { markersMap[pgId].remove(); delete markersMap[pgId]; }
   allPlaygrounds = allPlaygrounds.filter(p => p.id !== pgId);
   closePanel();
@@ -790,16 +678,12 @@ async function confirmDelete() {
 // COMMENTS
 // ═══════════════════════════════════════════════
 async function loadComments(pgId) {
-  const { data } = await db
-    .from('comments')
-    .select('*')
-    .eq('playground_id', pgId)
-    .order('created_at', { ascending: true });
+  const { data } = await db.from('comments').select('*')
+    .eq('playground_id', pgId).order('created_at', { ascending: true });
   renderComments(data || []);
 
   if (commentsChannel) db.removeChannel(commentsChannel);
-  commentsChannel = db
-    .channel(`comments:${pgId}`)
+  commentsChannel = db.channel(`comments:${pgId}`)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'comments', filter: `playground_id=eq.${pgId}` },
         () => loadComments(pgId))
     .subscribe();
@@ -814,20 +698,16 @@ function renderComments(list) {
   }
   el.innerHTML = list.map(c => `
     <div class="comment-item">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-        <div>
-          <span style="font-weight:700;font-size:13px;">${esc(c.guest_nickname || '익명')}</span>
-          <span style="color:#bbb;font-size:12px;margin-left:8px;">${new Date(c.created_at).toLocaleDateString('ko-KR')}</span>
-        </div>
-      </div>
+      <span style="font-weight:700;font-size:13px;">${esc(c.guest_nickname || '익명')}</span>
+      <span style="color:#bbb;font-size:12px;margin-left:8px;">${new Date(c.created_at).toLocaleDateString('ko-KR')}</span>
       <p style="font-size:14px;margin-top:5px;color:#333;">${esc(c.content)}</p>
     </div>`).join('');
 }
 
 async function submitComment() {
   if (!selectedPG) return;
-  const nickEl   = document.getElementById('comment-nickname');
-  const input    = document.getElementById('comment-input');
+  const nickEl  = document.getElementById('comment-nickname');
+  const input   = document.getElementById('comment-input');
   const nickname = nickEl.value.trim() || '익명';
   const content  = input.value.trim();
   if (!content) return;
@@ -836,43 +716,29 @@ async function submitComment() {
   input.value = '';
   const listEl = document.getElementById('comments-list');
   if (listEl) {
-    const tempId = 'temp-' + Date.now();
-    const tempDiv = document.createElement('div');
-    tempDiv.className = 'comment-item';
-    tempDiv.id = tempId;
-    tempDiv.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-        <div>
-          <span style="font-weight:700;font-size:13px;">${esc(nickname)}</span>
-          <span style="color:#bbb;font-size:12px;margin-left:8px;">방금 전</span>
-        </div>
-      </div>
+    const tempId  = 'c-tmp-' + Date.now();
+    const emptyMsg = listEl.querySelector('p');
+    if (emptyMsg) emptyMsg.remove();
+    const div = document.createElement('div');
+    div.className = 'comment-item';
+    div.id = tempId;
+    div.innerHTML = `
+      <span style="font-weight:700;font-size:13px;">${esc(nickname)}</span>
+      <span style="color:#bbb;font-size:12px;margin-left:8px;">방금 전</span>
       <p style="font-size:14px;margin-top:5px;color:#333;">${esc(content)}</p>`;
-    // "첫 댓글" 안내 문구가 있으면 제거
-    if (listEl.querySelector('p')) listEl.innerHTML = '';
-    listEl.appendChild(tempDiv);
+    listEl.appendChild(div);
+
+    const { error } = await db.from('comments').insert({
+      playground_id: selectedPG.id, guest_nickname: nickname, content
+    });
+
+    if (error) {
+      // 실패 시 임시 댓글 제거, 입력 복원
+      document.getElementById(tempId)?.remove();
+      input.value = content;
+      alert('댓글 등록 중 오류가 발생했습니다.\n' + error.message);
+    }
   }
-
-  const { error } = await db.from('comments').insert({
-    playground_id: selectedPG.id,
-    guest_nickname: nickname,
-    content
-  });
-
-  if (error) {
-    // 실패 시 임시 댓글 제거 후 알림
-    const temp = document.getElementById('temp-' + (Date.now() - 1));
-    if (temp) temp.remove();
-    alert('댓글 등록 중 오류가 발생했습니다.\n' + error.message);
-    input.value = content; // 내용 복원
-  }
-}
-
-// ═══════════════════════════════════════════════
-// FAB
-// ═══════════════════════════════════════════════
-function handleFab() {
-  openRegisterModal();
 }
 
 // ═══════════════════════════════════════════════
@@ -880,13 +746,12 @@ function handleFab() {
 // ═══════════════════════════════════════════════
 function openRegisterModal() {
   editingPG = null;
-  document.querySelector('#register-modal h2').textContent = '🛝 놀이터 등록';
-  document.getElementById('reg-submit-btn').textContent = '등록하기';
+  document.getElementById('reg-modal-title').textContent = '🛝 놀이터 등록';
+  document.getElementById('reg-submit-btn').textContent  = '등록하기';
   document.getElementById('pwd-field-wrap').style.display = 'block';
   document.getElementById('feature-checks').innerHTML = FEATURES.map(f => `
     <label class="check-label">
-      <input type="checkbox" name="feat" value="${f.id}" style="accent-color:#FF6B35;" />
-      ${f.label}
+      <input type="checkbox" name="feat" value="${f.id}" style="accent-color:#FF6B35;" />${f.label}
     </label>`).join('');
   document.getElementById('register-modal').classList.remove('hidden');
 }
@@ -894,14 +759,13 @@ function openRegisterModal() {
 function openEditModal() {
   if (!selectedPG) return;
   editingPG = selectedPG;
-  document.querySelector('#register-modal h2').textContent = '✏️ 놀이터 수정';
-  document.getElementById('reg-submit-btn').textContent = '수정 완료';
+  document.getElementById('reg-modal-title').textContent = '✏️ 놀이터 수정';
+  document.getElementById('reg-submit-btn').textContent  = '수정 완료';
   document.getElementById('pwd-field-wrap').style.display = 'none';
   document.getElementById('feature-checks').innerHTML = FEATURES.map(f => `
     <label class="check-label">
       <input type="checkbox" name="feat" value="${f.id}" style="accent-color:#FF6B35;"
-             ${(editingPG.features || []).includes(f.id) ? 'checked' : ''} />
-      ${f.label}
+             ${(editingPG.features || []).includes(f.id) ? 'checked' : ''} />${f.label}
     </label>`).join('');
   document.getElementById('reg-nickname').value    = editingPG.creator_nickname || '';
   document.getElementById('reg-name').value        = editingPG.name || '';
@@ -909,18 +773,18 @@ function openEditModal() {
   document.getElementById('reg-lat').value         = editingPG.lat || '';
   document.getElementById('reg-lng').value         = editingPG.lng || '';
   document.getElementById('reg-description').value = editingPG.description || '';
+  selectedFiles = [];
+  document.getElementById('image-previews').innerHTML = '';
   document.getElementById('register-modal').classList.remove('hidden');
 }
 
 function closeRegisterModal() {
   editingPG = null;
   document.getElementById('register-modal').classList.add('hidden');
-  ['reg-nickname','reg-name','reg-address','reg-lat','reg-lng','reg-description','reg-password'].forEach(id => {
-    document.getElementById(id).value = '';
-  });
+  ['reg-nickname','reg-name','reg-address','reg-lat','reg-lng','reg-description','reg-password']
+    .forEach(id => { document.getElementById(id).value = ''; });
   document.getElementById('image-previews').innerHTML = '';
   document.getElementById('reg-err').style.display = 'none';
-  document.getElementById('reg-submit-btn').textContent = '등록하기';
   document.getElementById('pwd-field-wrap').style.display = 'block';
   selectedFiles = [];
 }
@@ -931,20 +795,13 @@ function closeRegisterModal() {
 async function searchAddress() {
   const q = document.getElementById('addr-search-input').value.trim();
   if (!q) return;
-
   const resultsEl = document.getElementById('addr-search-results');
   resultsEl.style.display = 'block';
   resultsEl.innerHTML = '<div class="addr-result-item" style="color:#999;">검색 중...</div>';
-
   try {
     const res  = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&accept-language=ko`);
     const data = await res.json();
-
-    if (!data.length) {
-      resultsEl.innerHTML = '<div class="addr-result-item" style="color:#999;">검색 결과가 없어요</div>';
-      return;
-    }
-
+    if (!data.length) { resultsEl.innerHTML = '<div class="addr-result-item" style="color:#999;">검색 결과가 없어요</div>'; return; }
     resultsEl.innerHTML = data.map((item, i) => `
       <div class="addr-result-item" onclick="selectAddrResult(${i})"
            data-lat="${item.lat}" data-lng="${item.lon}" data-name="${item.display_name.replace(/"/g,"'")}">
@@ -956,14 +813,12 @@ async function searchAddress() {
 }
 
 function selectAddrResult(i) {
-  const item = document.querySelectorAll('.addr-result-item')[i];
+  const item = document.querySelectorAll('#addr-search-results .addr-result-item')[i];
   const lat  = parseFloat(item.dataset.lat);
   const lng  = parseFloat(item.dataset.lng);
-  const name = item.dataset.name;
-
   document.getElementById('reg-lat').value     = lat;
   document.getElementById('reg-lng').value     = lng;
-  document.getElementById('reg-address').value = name;
+  document.getElementById('reg-address').value = item.dataset.name;
   document.getElementById('addr-search-input').value = '';
   hideAddrResults();
   map.flyTo([lat, lng], 16);
@@ -994,16 +849,13 @@ function cancelLocationPicker() {
 async function onMapClick(e) {
   if (!isPickingLoc) return;
   const { lat, lng } = e.latlng;
-
   document.getElementById('reg-lat').value = lat;
   document.getElementById('reg-lng').value = lng;
-
   isPickingLoc = false;
   document.getElementById('location-picker').style.display = 'none';
   map.getContainer().style.cursor = '';
   document.getElementById('register-modal').classList.remove('hidden');
   document.getElementById('reg-address').value = '주소 불러오는 중…';
-
   try {
     const res  = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ko`);
     const data = await res.json();
@@ -1017,33 +869,25 @@ async function onMapClick(e) {
 // IMAGE HANDLING
 // ═══════════════════════════════════════════════
 function handleImageSelect(e) {
-  const MAX_MB = 5;
-  const files = Array.from(e.target.files);
+  const MAX_MB   = 5;
+  const files    = Array.from(e.target.files);
   const oversized = files.filter(f => f.size > MAX_MB * 1024 * 1024);
-  if (oversized.length) {
-    alert(`사진 한 장당 최대 ${MAX_MB}MB까지 업로드할 수 있어요.\n(초과 파일: ${oversized.map(f => f.name).join(', ')})`);
-  }
+  if (oversized.length) alert(`사진 한 장당 최대 ${MAX_MB}MB까지 업로드할 수 있어요.\n(초과: ${oversized.map(f=>f.name).join(', ')})`);
   const valid = files.filter(f => f.size <= MAX_MB * 1024 * 1024);
-  const toAdd = valid.slice(0, 5 - selectedFiles.length);
-  selectedFiles = [...selectedFiles, ...toAdd];
+  selectedFiles = [...selectedFiles, ...valid].slice(0, 5);
   renderPreviews();
   e.target.value = '';
 }
 
 function renderPreviews() {
-  document.getElementById('image-previews').innerHTML = selectedFiles.map((f, i) => {
-    const url = URL.createObjectURL(f);
-    return `<div class="upload-preview">
-      <img src="${url}" alt="미리보기" />
+  document.getElementById('image-previews').innerHTML = selectedFiles.map((f, i) => `
+    <div class="upload-preview">
+      <img src="${URL.createObjectURL(f)}" alt="미리보기" />
       <button class="rm-btn" onclick="removeImg(${i})">✕</button>
-    </div>`;
-  }).join('');
+    </div>`).join('');
 }
 
-function removeImg(i) {
-  selectedFiles.splice(i, 1);
-  renderPreviews();
-}
+function removeImg(i) { selectedFiles.splice(i, 1); renderPreviews(); }
 
 // ═══════════════════════════════════════════════
 // REGISTER SUBMIT
@@ -1065,9 +909,9 @@ async function handleRegister() {
   const features = [...document.querySelectorAll('input[name="feat"]:checked')].map(el => el.value);
   const btn = document.getElementById('reg-submit-btn');
   btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;margin:0 auto;"></div>';
-  btn.disabled = true;
+  btn.disabled  = true;
 
-  // Upload images
+  // 이미지 업로드
   const imageUrls = editingPG ? [...(editingPG.image_urls || [])] : [];
   for (const file of selectedFiles) {
     const ext  = file.name.split('.').pop();
@@ -1079,10 +923,7 @@ async function handleRegister() {
     }
   }
 
-  // Build payload
   const payload = { name, address, lat, lng, description: desc, features, image_urls: imageUrls, creator_nickname: nickname };
-
-  // Password: only set on new registration
   if (!editingPG) {
     const pwd = document.getElementById('reg-password').value.trim();
     if (pwd) payload.password = pwd;
@@ -1093,7 +934,7 @@ async function handleRegister() {
     ({ data, error } = await db.from('playgrounds').update(payload).eq('id', editingPG.id).select().single());
   } else {
     ({ data, error } = await db.from('playgrounds').insert(payload).select().single());
-    // password 컬럼이 DB에 없는 경우 비밀번호 없이 재시도
+    // password 컬럼이 없을 경우 재시도
     if (error && payload.password) {
       delete payload.password;
       ({ data, error } = await db.from('playgrounds').insert(payload).select().single());
@@ -1101,9 +942,13 @@ async function handleRegister() {
   }
 
   btn.textContent = editingPG ? '수정 완료' : '등록하기';
-  btn.disabled = false;
+  btn.disabled    = false;
 
-  if (error) { errEl.textContent = editingPG ? '수정 중 오류가 발생했습니다.' : '등록 중 오류가 발생했습니다.'; errEl.style.display = 'block'; return; }
+  if (error) {
+    errEl.textContent = editingPG ? '수정 중 오류가 발생했습니다.' : '등록 중 오류가 발생했습니다.';
+    errEl.style.display = 'block';
+    return;
+  }
 
   closeRegisterModal();
   if (editingPG) {
@@ -1132,7 +977,6 @@ function onSearchInput() {
 async function doSearch() {
   const q = document.getElementById('search-input').value.trim();
   if (!q) { hideSearchResults(); return; }
-
   const resultsEl = document.getElementById('search-results');
   resultsEl.style.display = 'block';
   resultsEl.innerHTML = '<div class="search-result-item" style="color:#999;">검색 중...</div>';
@@ -1141,58 +985,45 @@ async function doSearch() {
     pg.name.toLowerCase().includes(q.toLowerCase()) ||
     pg.address.toLowerCase().includes(q.toLowerCase())
   );
-
-  let html = '';
-
-  if (pgMatches.length) {
-    html += pgMatches.map(pg => `
-      <div class="search-result-item" onclick="selectPlayground('${pg.id}')">
-        <span class="search-result-label" style="background:#FFF0EA;color:#FF6B35;">놀이터</span>
-        <span>${pg.name} <span style="color:#aaa;font-size:12px;">· ${pg.address.split(',')[0]}</span></span>
-      </div>`).join('');
-  }
+  let html = pgMatches.map(pg => `
+    <div class="search-result-item" onclick="selectPlayground('${pg.id}')">
+      <span class="search-result-label" style="background:#FFF0EA;color:#FF6B35;">놀이터</span>
+      <span>${pg.name} <span style="color:#aaa;font-size:12px;">· ${pg.address.split(',')[0]}</span></span>
+    </div>`).join('');
 
   try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=3&accept-language=ko&countrycodes=kr`);
+    const res  = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=3&accept-language=ko&countrycodes=kr`);
     const addr = await res.json();
-    if (addr.length) {
-      html += addr.map(item => `
-        <div class="search-result-item" onclick="selectAddress(${item.lat},${item.lon})">
-          <span class="search-result-label" style="background:#EEF2FF;color:#4361EE;">주소</span>
-          <span>${item.display_name.split(',').slice(0,3).join(', ')}</span>
-        </div>`).join('');
-    }
+    html += addr.map(item => `
+      <div class="search-result-item" onclick="selectAddress(${item.lat},${item.lon})">
+        <span class="search-result-label" style="background:#EEF2FF;color:#4361EE;">주소</span>
+        <span>${item.display_name.split(',').slice(0,3).join(', ')}</span>
+      </div>`).join('');
   } catch {}
 
   resultsEl.innerHTML = html || '<div class="search-result-item" style="color:#999;">검색 결과가 없어요</div>';
 }
 
 function selectPlayground(id) {
-  hideSearchResults();
-  closeMobileSearch();
+  hideSearchResults(); closeMobileSearch();
   document.getElementById('search-input').value = '';
   const pg = allPlaygrounds.find(p => p.id === id);
-  if (!pg) return;
-  map.flyTo([pg.lat, pg.lng], 16);
-  openDetailPanel(pg);
+  if (pg) { map.flyTo([pg.lat, pg.lng], 16); openDetailPanel(pg); }
 }
 
 function selectAddress(lat, lng) {
-  hideSearchResults();
-  closeMobileSearch();
+  hideSearchResults(); closeMobileSearch();
   document.getElementById('search-input').value = '';
   map.flyTo([parseFloat(lat), parseFloat(lng)], 15);
 }
 
 function hideSearchResults() {
   const el = document.getElementById('search-results');
-  el.style.display = 'none';
-  el.innerHTML = '';
+  el.style.display = 'none'; el.innerHTML = '';
 }
 
-// ── Mobile search toggle ──
 function toggleMobileSearch() {
-  const bar = document.getElementById('search-bar');
+  const bar    = document.getElementById('search-bar');
   const isOpen = bar.classList.toggle('mobile-open');
   if (isOpen) setTimeout(() => document.getElementById('search-input').focus(), 50);
 }
@@ -1202,8 +1033,7 @@ function closeMobileSearch() {
 }
 
 document.addEventListener('click', e => {
-  if (!document.getElementById('search-bar').contains(e.target) &&
-      e.target.id !== 'search-toggle') {
+  if (!document.getElementById('search-bar').contains(e.target) && e.target.id !== 'search-toggle') {
     hideSearchResults();
     if (window.innerWidth <= 640) closeMobileSearch();
   }
@@ -1217,25 +1047,12 @@ loadPlaygrounds();
 showSplash();
 </script>
 
-<a href="https://jaechaeachoo.notion.site/341862bbe6f6801d8d25ea121db08f4e" target="_blank" rel="noopener" style="
-  position: fixed;
-  bottom: 16px;
-  right: 16px;
-  z-index: 1000;
-  display: block;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  overflow: hidden;
-  box-shadow: 2px 2px 8px rgba(0,0,0,0.18);
-  background: transparent;
-">
-  <img src="logo.png" alt="로고" style="
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    mix-blend-mode: multiply;
-  " />
+<a href="https://jaechaeachoo.notion.site/341862bbe6f6801d8d25ea121db08f4e" target="_blank" rel="noopener"
+   style="position:fixed;bottom:16px;right:16px;z-index:1000;display:block;
+          width:60px;height:60px;border-radius:50%;overflow:hidden;
+          box-shadow:2px 2px 8px rgba(0,0,0,.18);background:transparent;">
+  <img src="logo.png" alt="로고"
+       style="width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply;" />
 </a>
 </body>
 </html>
