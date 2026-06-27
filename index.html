@@ -267,8 +267,12 @@
         display: none;
         top: 116px; left: 12px; right: 12px;
         width: auto; transform: none;
+        max-width: none;
       }
       #search-bar.mobile-open { display: block; }
+      #search-wrap { padding: 10px 16px; }
+      #search-input { font-size: 16px; } /* 16px 미만이면 iOS가 자동 확대 */
+      #search-results { max-height: 320px; border-radius: 20px; }
       #search-toggle {
         display: flex;
         position: fixed; top: 72px; right: 16px; z-index: 1001;
@@ -277,6 +281,8 @@
         box-shadow: 2px 2px 0 #333;
         align-items: center; justify-content: center;
         cursor: pointer; font-size: 17px;
+        touch-action: manipulation; /* 더블탭 확대 방지 */
+        -webkit-tap-highlight-color: transparent;
       }
       .app-header p { font-size: 10px; }
     }
@@ -316,12 +322,16 @@
 
 <!-- ════════════ SPLASH ════════════ -->
 <div id="splash">
-  <div id="splash-emoji">🛝</div>
-  <h1 style="font-family:'Jua',sans-serif;font-size:2rem;color:#333;">놀이터 지도</h1>
+  <img src="logo.png" alt="재채기 로고" style="width:90px;height:90px;object-fit:contain;mix-blend-mode:multiply;margin-bottom:4px;" onerror="this.style.display='none'" />
+  <h1 style="font-family:'Jua',sans-serif;font-size:2.2rem;color:#333;letter-spacing:-1px;">🛝 놀이터 지도</h1>
   <p style="font-family:'Nanum Gothic',sans-serif;font-size:13px;color:#888;text-align:center;line-height:1.7;padding:0 32px;">
     산책로가 아닌, 마음껏 뛰어놀 수 있는<br>공공 놀이터를 알려주세요!
   </p>
-  <div id="splash-count" style="font-family:'Jua',sans-serif;font-size:1rem;color:#FF6B35;margin-top:4px;"></div>
+  <div id="splash-count" style="
+    font-family:'Jua',sans-serif;font-size:1.35rem;color:white;
+    background:#FF6B35;border:3px solid #333;border-radius:50px;
+    box-shadow:3px 3px 0 #333;padding:8px 24px;margin-top:8px;
+  "></div>
 </div>
 
 <!-- ════════════ MAP ════════════ -->
@@ -472,6 +482,23 @@ function esc(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
+// 이미지 로드 실패 시 — alt 텍스트 대신 이모지 플레이스홀더로 교체
+window.imgErr = function(el) {
+  el.onerror = null;
+  el.alt = '';
+  el.style.display = 'none';
+  const wrap = el.parentElement;
+  if (wrap && !wrap.querySelector('.img-fallback')) {
+    const fb = document.createElement('div');
+    fb.className = 'img-fallback';
+    fb.style.cssText = 'display:flex;align-items:center;justify-content:center;background:#fafafa;font-size:48px;';
+    fb.style.width = el.style.width || '100%';
+    fb.style.height = el.style.height || '200px';
+    fb.textContent = '🛝';
+    wrap.insertBefore(fb, el);
+  }
+};
+
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ═══════════════════════════════════════════════
@@ -617,9 +644,6 @@ function renderDetail(pg) {
   const creator = esc(pg.creator_nickname || '익명');
   const hasPassword = !!pg.password;
 
-  // image placeholder SVG for broken images
-  const placeholder = `data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='200'><rect width='400' height='200' fill='%23fafafa'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='48'>🛝</text></svg>`;
-
   document.getElementById('detail-content').innerHTML = `
     <button onclick="closePanel()" style="
       position:absolute;top:10px;right:10px;z-index:10;
@@ -627,14 +651,13 @@ function renderDetail(pg) {
       width:30px;height:30px;font-size:15px;cursor:pointer;color:#555;">✕</button>
 
     ${imgs.length
-      ? `<img id="main-img" class="gallery-main" src="${imgs[0]}" alt="놀이터 사진"
-             onerror="this.src='${placeholder}'" loading="eager" referrerpolicy="no-referrer" />
+      ? `<img id="main-img" class="gallery-main" src="${imgs[0]}" alt=""
+             onerror="imgErr(this)" loading="eager" />
          ${imgs.length > 1
            ? `<div style="display:flex;gap:6px;padding:8px 12px;overflow-x:auto;">
                 ${imgs.map((u,i) => `<img src="${u}" class="gallery-thumb${i===0?' active':''}"
                   onclick="switchImg(this,'${u}')" alt=""
-                  onerror="this.src='${placeholder}'"
-                  loading="eager" referrerpolicy="no-referrer" />`).join('')}
+                  onerror="imgErr(this)" loading="eager" />`).join('')}
               </div>`
            : ''}`
       : `<div style="height:140px;background:#fafafa;display:flex;align-items:center;justify-content:center;font-size:52px;">🛝</div>`}
