@@ -19,13 +19,24 @@
       position: fixed; inset: 0; z-index: 3000;
       background: #FFF8E7;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 10px;
+      gap: 8px;
       transition: opacity 0.7s ease;
     }
     #splash.hiding { opacity: 0; pointer-events: none; }
     #splash.gone { display: none; }
-    #splash-emoji { font-size: 56px; animation: bounce 1s ease infinite alternate; }
-    @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-12px); } }
+    #splash-count-badge {
+      font-family: 'Jua', sans-serif;
+      background: #FF6B35; color: white;
+      border: 3px solid #333; border-radius: 50px;
+      box-shadow: 4px 4px 0 #333;
+      padding: 12px 28px; margin: 4px 0;
+      text-align: center; line-height: 1.4;
+      font-size: 1.5rem;
+    }
+    #splash-count-badge .count-num {
+      font-size: 2.4rem; display: block; line-height: 1.1;
+    }
+    @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
 
     /* ── Header ── */
     .app-header {
@@ -323,13 +334,11 @@
 <!-- ════════════ SPLASH ════════════ -->
 <div id="splash">
   <img src="logo.png" alt="재채기 로고" style="width:80px;height:80px;object-fit:contain;mix-blend-mode:multiply;" onerror="this.style.display='none'" />
-  <h1 style="font-family:'Jua',sans-serif;font-size:1.6rem;color:#555;">🛝 놀이터 지도</h1>
-  <div id="splash-count" style="
-    font-family:'Jua',sans-serif;font-size:2rem;color:white;
-    background:#FF6B35;border:3px solid #333;border-radius:50px;
-    box-shadow:4px 4px 0 #333;padding:10px 28px;margin:6px 0;
-    min-height:52px;display:flex;align-items:center;justify-content:center;
-  ">불러오는 중…</div>
+  <div id="splash-count-badge">
+    <span class="count-num"><span id="splash-count-num">0</span>개의 놀이터가</span>
+    등록되어 있어요! 🎉
+  </div>
+  <h1 style="font-family:'Jua',sans-serif;font-size:1.5rem;color:#555;margin-top:4px;">🛝 놀이터 지도</h1>
   <p style="font-family:'Nanum Gothic',sans-serif;font-size:12px;color:#aaa;text-align:center;line-height:1.7;">
     산책로가 아닌, 마음껏 뛰어놀 수 있는<br>공공 놀이터를 알려주세요!
   </p>
@@ -527,23 +536,41 @@ let selectedFiles   = [];
 let isPickingLoc    = false;
 let panelLoading    = false;
 let allPlaygrounds  = [];
+const markersMap    = {}; // id → Leaflet marker (삭제 시 지도에서 제거용)
 
 // ═══════════════════════════════════════════════
 // SPLASH
 // ═══════════════════════════════════════════════
 async function showSplash() {
   const splash = document.getElementById('splash');
+  const numEl  = document.getElementById('splash-count-num');
+
   try {
     const { count } = await db.from('playgrounds').select('*', { count: 'exact', head: true });
-    if (count !== null && count > 0) {
-      document.getElementById('splash-count').textContent = `현재 ${count}개의 놀이터가 등록되어 있어요 🎉`;
-    }
+    const target = count || 0;
+
+    // 슬롯머신처럼 숫자가 올라가는 애니메이션
+    const duration = 1400;
+    const steps    = 40;
+    const delay    = duration / steps;
+    let   step     = 0;
+    const timer = setInterval(() => {
+      step++;
+      const progress = step / steps;
+      // easeOut 곡선으로 처음엔 빠르게, 끝에서 천천히 멈춤
+      const eased = 1 - Math.pow(1 - progress, 3);
+      numEl.textContent = Math.round(eased * target);
+      if (step >= steps) {
+        clearInterval(timer);
+        numEl.textContent = target;
+      }
+    }, delay);
   } catch {}
 
   setTimeout(() => {
     splash.classList.add('hiding');
     setTimeout(() => splash.classList.add('gone'), 700);
-  }, 3000);
+  }, 3200);
 }
 
 // ═══════════════════════════════════════════════
@@ -597,9 +624,10 @@ function playgroundIcon() {
 }
 
 function addMarker(pg) {
-  L.marker([pg.lat, pg.lng], { icon: playgroundIcon() })
+  const m = L.marker([pg.lat, pg.lng], { icon: playgroundIcon() })
     .addTo(map)
     .on('click', () => openDetailPanel(pg));
+  markersMap[pg.id] = m;
 }
 
 // ═══════════════════════════════════════════════
@@ -676,14 +704,18 @@ function renderDetail(pg) {
 
       ${pg.description ? `<p style="font-size:14px;line-height:1.65;color:#444;margin-bottom:12px;">${esc(pg.description)}</p>` : ''}
 
-      <p style="font-size:12px;color:#aaa;margin-bottom:12px;">등록: ${creator} · ${date}</p>
-
-      ${hasPassword
-        ? `<div style="display:flex;gap:8px;margin-bottom:16px;">
-             <button class="crayon-btn" style="background:#4361EE;color:white;font-size:13px;" onclick="checkPasswordAndAct('edit')">✏️ 수정하기</button>
-             <button class="crayon-btn" style="background:#E63946;color:white;font-size:13px;" onclick="checkPasswordAndAct('delete')">🗑️ 삭제하기</button>
-           </div>`
-        : ''}
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px;">
+        <p style="font-size:12px;color:#aaa;">등록: ${creator} · ${date}</p>
+        ${hasPassword
+          ? `<div style="display:flex;gap:6px;">
+               <button style="font-family:'Jua',sans-serif;font-size:11px;padding:4px 10px;
+                 border:2px solid #4361EE;border-radius:20px;background:white;color:#4361EE;
+                 cursor:pointer;" onclick="checkPasswordAndAct('edit')">✏️ 수정</button>
+               <button style="font-family:'Jua',sans-serif;font-size:11px;padding:4px 10px;
+                 border:2px solid #E63946;border-radius:20px;background:white;color:#E63946;
+                 cursor:pointer;" onclick="checkPasswordAndAct('delete')">🗑️ 삭제</button>
+             </div>`
+          : ''}</div>
 
       <hr class="section-divider" />
 
@@ -742,13 +774,16 @@ function confirmEdit() {
 
 async function confirmDelete() {
   if (!selectedPG) return;
-  if (!confirm(`"${selectedPG.name}" 놀이터를 삭제할까요? 이 작업은 되돌릴 수 없어요.`)) return;
-  const { error } = await db.from('playgrounds').delete().eq('id', selectedPG.id);
-  if (error) { alert('삭제 중 오류가 발생했습니다.'); return; }
-  allPlaygrounds = allPlaygrounds.filter(p => p.id !== selectedPG.id);
+  if (!confirm(`"${selectedPG.name}" 놀이터를 삭제할까요?\n이 작업은 되돌릴 수 없어요.`)) return;
+
+  const pgId = selectedPG.id;
+  const { error } = await db.from('playgrounds').delete().eq('id', pgId);
+  if (error) { alert('삭제 중 오류가 발생했습니다.\n' + error.message); return; }
+
+  // 지도 마커 제거
+  if (markersMap[pgId]) { markersMap[pgId].remove(); delete markersMap[pgId]; }
+  allPlaygrounds = allPlaygrounds.filter(p => p.id !== pgId);
   closePanel();
-  // 마커 제거 — 페이지 새로고침으로 지도 갱신
-  location.reload();
 }
 
 // ═══════════════════════════════════════════════
@@ -796,8 +831,23 @@ async function submitComment() {
   const nickname = nickEl.value.trim() || '익명';
   const content  = input.value.trim();
   if (!content) return;
+
+  const btn = document.querySelector('#detail-panel .crayon-btn[onclick="submitComment()"]');
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+
+  const { error } = await db.from('comments').insert({
+    playground_id: selectedPG.id,
+    guest_nickname: nickname,
+    content
+  });
+
+  if (btn) { btn.disabled = false; btn.textContent = '등록'; }
+
+  if (error) {
+    alert('댓글 등록 중 오류가 발생했습니다.\n' + error.message);
+    return;
+  }
   input.value = '';
-  await db.from('comments').insert({ playground_id: selectedPG.id, guest_nickname: nickname, content });
 }
 
 // ═══════════════════════════════════════════════
