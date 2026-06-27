@@ -666,12 +666,10 @@ async function confirmDelete() {
   const pgId = selectedPG.id;
   // 댓글 먼저 삭제 (외래키 제약)
   await db.from('comments').delete().eq('playground_id', pgId);
-  const { data: deleted, error } = await db.from('playgrounds').delete().eq('id', pgId).select();
+  const { error: cmtErr } = await db.from('comments').delete().eq('playground_id', pgId);
+  if (cmtErr) { alert('댓글 삭제 중 오류:\n' + cmtErr.message); return; }
+  const { error } = await db.from('playgrounds').delete().eq('id', pgId);
   if (error) { alert('삭제 중 오류가 발생했습니다.\n' + error.message); return; }
-  if (!deleted || deleted.length === 0) {
-    alert('삭제 권한이 없습니다.\n\nSupabase 대시보드 → Authentication → Policies에서\nplaygrounds 테이블에 DELETE 정책을 추가해주세요.\n\nSQL: CREATE POLICY "anon_delete" ON playgrounds FOR DELETE TO anon USING (true);');
-    return;
-  }
 
   if (markersMap[pgId]) { markersMap[pgId].remove(); delete markersMap[pgId]; }
   allPlaygrounds = allPlaygrounds.filter(p => p.id !== pgId);
