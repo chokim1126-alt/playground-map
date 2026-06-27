@@ -14,6 +14,19 @@
 
     #map { width: 100vw; height: 100vh; }
 
+    /* ── Splash ── */
+    #splash {
+      position: fixed; inset: 0; z-index: 3000;
+      background: #FFF8E7;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 10px;
+      transition: opacity 0.7s ease;
+    }
+    #splash.hiding { opacity: 0; pointer-events: none; }
+    #splash.gone { display: none; }
+    #splash-emoji { font-size: 56px; animation: bounce 1s ease infinite alternate; }
+    @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-12px); } }
+
     /* ── Header ── */
     .app-header {
       position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
@@ -33,6 +46,7 @@
       font-family: 'Nanum Gothic', sans-serif; font-size: 11px; color: #888;
       pointer-events: none;
     }
+
     /* ── Crayon system ── */
     .crayon-btn {
       font-family: 'Jua', sans-serif;
@@ -124,6 +138,15 @@
       padding: 24px;
     }
 
+    /* ── Password Modal ── */
+    #pwd-modal {
+      position: fixed; inset: 0; z-index: 2500;
+      background: rgba(0,0,0,.55);
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    #pwd-modal.hidden { display: none; }
+
     /* ── Tab ── */
     .tab-btn {
       padding: 10px 20px;
@@ -170,7 +193,7 @@
     #location-picker {
       display: none;
       position: fixed; inset: 0; z-index: 1500;
-      pointer-events: none; /* 지도 클릭/드래그/줌 모두 통과 */
+      pointer-events: none;
     }
     #location-picker .lp-hint {
       position: absolute; top: 68px; left: 50%; transform: translateX(-50%);
@@ -185,7 +208,7 @@
     }
     #location-picker .lp-cancel {
       position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
-      pointer-events: all; /* 취소 버튼만 클릭 가능 */
+      pointer-events: all;
     }
 
     /* ── Address search dropdown ── */
@@ -219,11 +242,6 @@
       font-size: 13px; flex: 1; background: transparent; min-width: 0;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    @media (max-width: 640px) {
-      #search-bar { top: 76px; width: calc(100vw - 80px); }
-      #search-input { font-size: 12px; }
-      .app-header p { font-size: 10px; }
-    }
     #search-results {
       display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0;
       background: white; border: 2.5px solid #333; border-radius: 16px;
@@ -238,6 +256,29 @@
     .search-result-label {
       font-size: 10px; font-family: 'Jua', sans-serif;
       padding: 2px 8px; border-radius: 20px; flex-shrink: 0;
+    }
+
+    /* ── Mobile search toggle ── */
+    #search-toggle {
+      display: none;
+    }
+    @media (max-width: 640px) {
+      #search-bar {
+        display: none;
+        top: 116px; left: 12px; right: 12px;
+        width: auto; transform: none;
+      }
+      #search-bar.mobile-open { display: block; }
+      #search-toggle {
+        display: flex;
+        position: fixed; top: 72px; right: 16px; z-index: 1001;
+        width: 36px; height: 36px;
+        background: white; border: 2.5px solid #333; border-radius: 50%;
+        box-shadow: 2px 2px 0 #333;
+        align-items: center; justify-content: center;
+        cursor: pointer; font-size: 17px;
+      }
+      .app-header p { font-size: 10px; }
     }
 
     /* ── Comment ── */
@@ -273,6 +314,16 @@
 </head>
 <body>
 
+<!-- ════════════ SPLASH ════════════ -->
+<div id="splash">
+  <div id="splash-emoji">🛝</div>
+  <h1 style="font-family:'Jua',sans-serif;font-size:2rem;color:#333;">놀이터 지도</h1>
+  <p style="font-family:'Nanum Gothic',sans-serif;font-size:13px;color:#888;text-align:center;line-height:1.7;padding:0 32px;">
+    산책로가 아닌, 마음껏 뛰어놀 수 있는<br>공공 놀이터를 알려주세요!
+  </p>
+  <div id="splash-count" style="font-family:'Jua',sans-serif;font-size:1rem;color:#FF6B35;margin-top:4px;"></div>
+</div>
+
 <!-- ════════════ MAP ════════════ -->
 <div id="map"></div>
 
@@ -293,6 +344,9 @@
   </div>
   <div id="search-results"></div>
 </div>
+
+<!-- ════════════ MOBILE SEARCH TOGGLE ════════════ -->
+<button id="search-toggle" onclick="toggleMobileSearch()" title="검색">🔍</button>
 
 <!-- ════════════ FAB ════════════ -->
 <button id="fab" onclick="handleFab()" title="놀이터 등록">+</button>
@@ -315,7 +369,6 @@
     <div style="margin-bottom:12px;">
       <label style="font-size:13px;font-weight:700;display:block;margin-bottom:8px;">📍 위치</label>
 
-      <!-- 주소 검색 -->
       <div style="position:relative; margin-bottom:8px;">
         <div style="display:flex;gap:8px;">
           <input type="text" id="addr-search-input" class="crayon-input"
@@ -327,7 +380,6 @@
         <div id="addr-search-results"></div>
       </div>
 
-      <!-- 지도 클릭 선택 -->
       <div style="display:flex;gap:8px;align-items:center;">
         <input type="text" id="reg-address" class="crayon-input" placeholder="선택된 위치가 여기에 표시돼요" readonly style="flex:1;font-size:12px;color:#666;" />
         <button class="crayon-btn" style="background:#4CAF50;color:white;font-size:12px;padding:7px 12px;white-space:nowrap;" onclick="startLocationPicker()">🗺️ 지도에서 선택</button>
@@ -340,6 +392,12 @@
     <div style="margin-bottom:12px;">
       <label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px;">닉네임</label>
       <input type="text" id="reg-nickname" class="crayon-input" placeholder="예: 놀이터러버" />
+    </div>
+
+    <!-- Password -->
+    <div style="margin-bottom:12px;" id="pwd-field-wrap">
+      <label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px;">🔒 수정 비밀번호 <span style="font-weight:400;color:#aaa;">(숫자 4자리)</span></label>
+      <input type="password" id="reg-password" class="crayon-input" maxlength="4" inputmode="numeric" placeholder="나중에 수정할 때 필요해요" />
     </div>
 
     <!-- Name -->
@@ -373,6 +431,22 @@
   </div>
 </div>
 
+<!-- ════════════ PASSWORD CHECK MODAL ════════════ -->
+<div id="pwd-modal" class="hidden">
+  <div class="modal-box" style="max-width:320px;">
+    <h2 style="font-family:'Jua',sans-serif;font-size:1.1rem;margin-bottom:12px;">🔒 수정 비밀번호 확인</h2>
+    <p style="font-size:13px;color:#666;margin-bottom:14px;">등록 시 설정한 숫자 4자리를 입력해주세요.</p>
+    <input type="password" id="pwd-input" class="crayon-input" maxlength="4" inputmode="numeric"
+           placeholder="숫자 4자리"
+           onkeydown="if(event.key==='Enter')confirmEdit()" style="margin-bottom:10px;" />
+    <div id="pwd-err" style="color:#E63946;font-size:13px;margin-bottom:10px;display:none;">비밀번호가 맞지 않아요.</div>
+    <div style="display:flex;gap:8px;">
+      <button class="crayon-btn" style="flex:1;" onclick="closePwdModal()">취소</button>
+      <button class="crayon-btn" style="flex:1;background:#FF6B35;color:white;" onclick="confirmEdit()">확인</button>
+    </div>
+  </div>
+</div>
+
 <!-- ════════════ LOCATION PICKER ════════════ -->
 <div id="location-picker">
   <div class="lp-hint">📍 지도를 클릭해서 위치를 선택하세요</div>
@@ -387,17 +461,17 @@
 
 <script>
 // ═══════════════════════════════════════════════
-// CONFIG  ← Supabase 대시보드에서 복사해서 넣으세요
+// CONFIG
 // ═══════════════════════════════════════════════
 const SUPABASE_URL      = 'https://czxxxudjbevkxcuheygc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6eHh4dWRqYmV2a3hjdWhleWdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNzQzNTMsImV4cCI6MjA5Njc1MDM1M30.c0Bi1V6Lan-DQeWzGhoAzUy5N0QQt1qCjstIbsf0I9E';
 
 const { createClient } = window.supabase;
 
-// XSS 방지 — 사용자 입력값은 반드시 이 함수를 거쳐서 HTML에 삽입
 function esc(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
+
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ═══════════════════════════════════════════════
@@ -424,12 +498,30 @@ let commentsChannel = null;
 let selectedFiles   = [];
 let isPickingLoc    = false;
 let panelLoading    = false;
+let allPlaygrounds  = [];
+
+// ═══════════════════════════════════════════════
+// SPLASH
+// ═══════════════════════════════════════════════
+async function showSplash() {
+  const splash = document.getElementById('splash');
+  try {
+    const { count } = await db.from('playgrounds').select('*', { count: 'exact', head: true });
+    if (count !== null && count > 0) {
+      document.getElementById('splash-count').textContent = `현재 ${count}개의 놀이터가 등록되어 있어요 🎉`;
+    }
+  } catch {}
+
+  setTimeout(() => {
+    splash.classList.add('hiding');
+    setTimeout(() => splash.classList.add('gone'), 700);
+  }, 3000);
+}
 
 // ═══════════════════════════════════════════════
 // MAP INIT
 // ═══════════════════════════════════════════════
 function initMap() {
-  // Fix Leaflet default icon broken paths (webpack/bundler bug)
   delete L.Icon.Default.prototype._getIconUrl;
   L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
@@ -523,6 +615,10 @@ function renderDetail(pg) {
   const feats   = pg.features   || [];
   const date    = new Date(pg.created_at).toLocaleDateString('ko-KR');
   const creator = esc(pg.creator_nickname || '익명');
+  const hasPassword = !!pg.password;
+
+  // image placeholder SVG for broken images
+  const placeholder = `data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='200'><rect width='400' height='200' fill='%23fafafa'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='48'>🛝</text></svg>`;
 
   document.getElementById('detail-content').innerHTML = `
     <button onclick="closePanel()" style="
@@ -531,11 +627,14 @@ function renderDetail(pg) {
       width:30px;height:30px;font-size:15px;cursor:pointer;color:#555;">✕</button>
 
     ${imgs.length
-      ? `<img id="main-img" class="gallery-main" src="${imgs[0]}" alt="놀이터 사진" onerror="this.style.display='none'"/>
+      ? `<img id="main-img" class="gallery-main" src="${imgs[0]}" alt="놀이터 사진"
+             onerror="this.src='${placeholder}'" loading="eager" referrerpolicy="no-referrer" />
          ${imgs.length > 1
            ? `<div style="display:flex;gap:6px;padding:8px 12px;overflow-x:auto;">
                 ${imgs.map((u,i) => `<img src="${u}" class="gallery-thumb${i===0?' active':''}"
-                  onclick="switchImg(this,'${u}')" alt="" onerror="this.remove()"/>`).join('')}
+                  onclick="switchImg(this,'${u}')" alt=""
+                  onerror="this.src='${placeholder}'"
+                  loading="eager" referrerpolicy="no-referrer" />`).join('')}
               </div>`
            : ''}`
       : `<div style="height:140px;background:#fafafa;display:flex;align-items:center;justify-content:center;font-size:52px;">🛝</div>`}
@@ -553,7 +652,11 @@ function renderDetail(pg) {
 
       ${pg.description ? `<p style="font-size:14px;line-height:1.65;color:#444;margin-bottom:12px;">${esc(pg.description)}</p>` : ''}
 
-      <p style="font-size:12px;color:#aaa;margin-bottom:16px;">등록: ${creator} · ${date}</p>
+      <p style="font-size:12px;color:#aaa;margin-bottom:12px;">등록: ${creator} · ${date}</p>
+
+      ${hasPassword
+        ? `<button class="crayon-btn" style="background:#4361EE;color:white;font-size:13px;margin-bottom:16px;" onclick="checkPasswordAndEdit()">✏️ 수정하기</button>`
+        : ''}
 
       <hr class="section-divider" />
 
@@ -576,6 +679,31 @@ function switchImg(el, url) {
   document.getElementById('main-img').src = url;
   document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════
+// PASSWORD CHECK FOR EDIT
+// ═══════════════════════════════════════════════
+function checkPasswordAndEdit() {
+  if (!selectedPG || !selectedPG.password) return;
+  document.getElementById('pwd-input').value = '';
+  document.getElementById('pwd-err').style.display = 'none';
+  document.getElementById('pwd-modal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('pwd-input').focus(), 50);
+}
+
+function closePwdModal() {
+  document.getElementById('pwd-modal').classList.add('hidden');
+}
+
+function confirmEdit() {
+  const entered = document.getElementById('pwd-input').value.trim();
+  if (entered === String(selectedPG.password)) {
+    closePwdModal();
+    openEditModal();
+  } else {
+    document.getElementById('pwd-err').style.display = 'block';
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -618,17 +746,13 @@ function renderComments(list) {
 
 async function submitComment() {
   if (!selectedPG) return;
-  const nickEl  = document.getElementById('comment-nickname');
-  const input   = document.getElementById('comment-input');
+  const nickEl   = document.getElementById('comment-nickname');
+  const input    = document.getElementById('comment-input');
   const nickname = nickEl.value.trim() || '익명';
   const content  = input.value.trim();
   if (!content) return;
   input.value = '';
   await db.from('comments').insert({ playground_id: selectedPG.id, guest_nickname: nickname, content });
-}
-
-async function deleteComment(id) {
-  await db.from('comments').delete().eq('id', id);
 }
 
 // ═══════════════════════════════════════════════
@@ -645,6 +769,7 @@ function openRegisterModal() {
   editingPG = null;
   document.querySelector('#register-modal h2').textContent = '🛝 놀이터 등록';
   document.getElementById('reg-submit-btn').textContent = '등록하기';
+  document.getElementById('pwd-field-wrap').style.display = 'block';
   document.getElementById('feature-checks').innerHTML = FEATURES.map(f => `
     <label class="check-label">
       <input type="checkbox" name="feat" value="${f.id}" style="accent-color:#FF6B35;" />
@@ -658,6 +783,7 @@ function openEditModal() {
   editingPG = selectedPG;
   document.querySelector('#register-modal h2').textContent = '✏️ 놀이터 수정';
   document.getElementById('reg-submit-btn').textContent = '수정 완료';
+  document.getElementById('pwd-field-wrap').style.display = 'none';
   document.getElementById('feature-checks').innerHTML = FEATURES.map(f => `
     <label class="check-label">
       <input type="checkbox" name="feat" value="${f.id}" style="accent-color:#FF6B35;"
@@ -676,12 +802,13 @@ function openEditModal() {
 function closeRegisterModal() {
   editingPG = null;
   document.getElementById('register-modal').classList.add('hidden');
-  ['reg-nickname','reg-name','reg-address','reg-lat','reg-lng','reg-description'].forEach(id => {
+  ['reg-nickname','reg-name','reg-address','reg-lat','reg-lng','reg-description','reg-password'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('image-previews').innerHTML = '';
   document.getElementById('reg-err').style.display = 'none';
   document.getElementById('reg-submit-btn').textContent = '등록하기';
+  document.getElementById('pwd-field-wrap').style.display = 'block';
   selectedFiles = [];
 }
 
@@ -735,7 +862,7 @@ function hideAddrResults() {
 }
 
 // ═══════════════════════════════════════════════
-// LOCATION PICKER (지도 클릭)
+// LOCATION PICKER
 // ═══════════════════════════════════════════════
 function startLocationPicker() {
   document.getElementById('register-modal').classList.add('hidden');
@@ -832,14 +959,21 @@ async function handleRegister() {
   for (const file of selectedFiles) {
     const ext  = file.name.split('.').pop();
     const path = `guest/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await db.storage.from('playground-images').upload(path, file);
-    if (!error) {
+    const { error: upErr } = await db.storage.from('playground-images').upload(path, file);
+    if (!upErr) {
       const { data: { publicUrl } } = db.storage.from('playground-images').getPublicUrl(path);
       imageUrls.push(publicUrl);
     }
   }
 
+  // Build payload
   const payload = { name, address, lat, lng, description: desc, features, image_urls: imageUrls, creator_nickname: nickname };
+
+  // Password: only set on new registration
+  if (!editingPG) {
+    const pwd = document.getElementById('reg-password').value.trim();
+    if (pwd) payload.password = pwd;
+  }
 
   let data, error;
   if (editingPG) {
@@ -865,12 +999,10 @@ async function handleRegister() {
   }
 }
 
-
 // ═══════════════════════════════════════════════
 // SEARCH
 // ═══════════════════════════════════════════════
 let searchTimer = null;
-let allPlaygrounds = [];
 
 function onSearchInput() {
   const q = document.getElementById('search-input').value.trim();
@@ -887,7 +1019,6 @@ async function doSearch() {
   resultsEl.style.display = 'block';
   resultsEl.innerHTML = '<div class="search-result-item" style="color:#999;">검색 중...</div>';
 
-  // 1. 등록된 놀이터 이름 검색
   const pgMatches = allPlaygrounds.filter(pg =>
     pg.name.toLowerCase().includes(q.toLowerCase()) ||
     pg.address.toLowerCase().includes(q.toLowerCase())
@@ -903,7 +1034,6 @@ async function doSearch() {
       </div>`).join('');
   }
 
-  // 2. Nominatim 주소 검색
   try {
     const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=3&accept-language=ko&countrycodes=kr`);
     const addr = await res.json();
@@ -921,6 +1051,7 @@ async function doSearch() {
 
 function selectPlayground(id) {
   hideSearchResults();
+  closeMobileSearch();
   document.getElementById('search-input').value = '';
   const pg = allPlaygrounds.find(p => p.id === id);
   if (!pg) return;
@@ -930,6 +1061,7 @@ function selectPlayground(id) {
 
 function selectAddress(lat, lng) {
   hideSearchResults();
+  closeMobileSearch();
   document.getElementById('search-input').value = '';
   map.flyTo([parseFloat(lat), parseFloat(lng)], 15);
 }
@@ -940,8 +1072,23 @@ function hideSearchResults() {
   el.innerHTML = '';
 }
 
+// ── Mobile search toggle ──
+function toggleMobileSearch() {
+  const bar = document.getElementById('search-bar');
+  const isOpen = bar.classList.toggle('mobile-open');
+  if (isOpen) setTimeout(() => document.getElementById('search-input').focus(), 50);
+}
+
+function closeMobileSearch() {
+  document.getElementById('search-bar').classList.remove('mobile-open');
+}
+
 document.addEventListener('click', e => {
-  if (!document.getElementById('search-bar').contains(e.target)) hideSearchResults();
+  if (!document.getElementById('search-bar').contains(e.target) &&
+      e.target.id !== 'search-toggle') {
+    hideSearchResults();
+    if (window.innerWidth <= 640) closeMobileSearch();
+  }
 });
 
 // ═══════════════════════════════════════════════
@@ -949,6 +1096,7 @@ document.addEventListener('click', e => {
 // ═══════════════════════════════════════════════
 initMap();
 loadPlaygrounds();
+showSplash();
 </script>
 
 <a href="https://jaechaeachoo.notion.site/341862bbe6f6801d8d25ea121db08f4e" target="_blank" rel="noopener" style="
