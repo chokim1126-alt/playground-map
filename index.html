@@ -832,8 +832,26 @@ async function submitComment() {
   const content  = input.value.trim();
   if (!content) return;
 
-  const btn = document.querySelector('#detail-panel .crayon-btn[onclick="submitComment()"]');
-  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  // 즉시 화면에 표시 (낙관적 업데이트)
+  input.value = '';
+  const listEl = document.getElementById('comments-list');
+  if (listEl) {
+    const tempId = 'temp-' + Date.now();
+    const tempDiv = document.createElement('div');
+    tempDiv.className = 'comment-item';
+    tempDiv.id = tempId;
+    tempDiv.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <span style="font-weight:700;font-size:13px;">${esc(nickname)}</span>
+          <span style="color:#bbb;font-size:12px;margin-left:8px;">방금 전</span>
+        </div>
+      </div>
+      <p style="font-size:14px;margin-top:5px;color:#333;">${esc(content)}</p>`;
+    // "첫 댓글" 안내 문구가 있으면 제거
+    if (listEl.querySelector('p')) listEl.innerHTML = '';
+    listEl.appendChild(tempDiv);
+  }
 
   const { error } = await db.from('comments').insert({
     playground_id: selectedPG.id,
@@ -841,13 +859,13 @@ async function submitComment() {
     content
   });
 
-  if (btn) { btn.disabled = false; btn.textContent = '등록'; }
-
   if (error) {
+    // 실패 시 임시 댓글 제거 후 알림
+    const temp = document.getElementById('temp-' + (Date.now() - 1));
+    if (temp) temp.remove();
     alert('댓글 등록 중 오류가 발생했습니다.\n' + error.message);
-    return;
+    input.value = content; // 내용 복원
   }
-  input.value = '';
 }
 
 // ═══════════════════════════════════════════════
