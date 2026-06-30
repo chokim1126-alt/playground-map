@@ -6,7 +6,6 @@
   <title>🛝 놀이터 지도</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Gothic:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -235,10 +234,19 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ── Zoom control ── */
-    .leaflet-top.leaflet-left { top: 72px; }
-
-    /* ── Marker ── */
-    .custom-marker { background: none !important; border: none !important; pointer-events: all !important; }
+    #zoom-ctrl {
+      position: fixed; top: 72px; left: 12px; z-index: 1000;
+      display: flex; flex-direction: column;
+      box-shadow: 2px 2px 0 #333; border-radius: 6px; overflow: hidden;
+      border: 2.5px solid #333;
+    }
+    #zoom-ctrl button {
+      width: 30px; height: 30px; background: white; border: none;
+      border-bottom: 1.5px solid #ddd; font-size: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; color: #333;
+    }
+    #zoom-ctrl button:last-child { border-bottom: none; }
+    #zoom-ctrl button:active { background: #f0f0f0; }
 
     /* ── Misc ── */
     .section-divider { border: none; border-top: 2px dashed #FFD60A; margin: 16px 0; }
@@ -271,6 +279,10 @@
 
 <!-- ════════════ MAP ════════════ -->
 <div id="map"></div>
+<div id="zoom-ctrl">
+  <button onclick="map.setLevel(map.getLevel()-1)" title="확대">+</button>
+  <button onclick="map.setLevel(map.getLevel()+1)" title="축소">−</button>
+</div>
 
 <!-- ════════════ HEADER ════════════ -->
 <header class="app-header">
@@ -403,7 +415,7 @@
 </div>
 
 <!-- ════════════ SCRIPTS ════════════ -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=7451681bf01564df075413061e0ab354&libraries=services&autoload=false"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <script>
@@ -457,6 +469,8 @@ const FEATURES = [
 // STATE
 // ═══════════════════════════════════════════════
 let map             = null;
+let geocoder        = null;
+let places           = null;
 let selectedPG      = null;
 let editingPG       = null;
 let commentsChannel = null;
@@ -465,7 +479,8 @@ let isPickingLoc    = false;
 let panelLoading    = false;
 let allPlaygrounds  = [];
 let pendingAction   = 'edit'; // 'edit' | 'delete'
-const markersMap    = {};     // id → Leaflet marker
+let lastAddrResults = [];
+const markersMap    = {};     // id → Kakao CustomOverlay
 
 // ═══════════════════════════════════════════════
 // SPLASH
@@ -497,19 +512,19 @@ async function showSplash() {
 // MAP INIT
 // ═══════════════════════════════════════════════
 function initMap() {
-  delete L.Icon.Default.prototype._getIconUrl;
-  L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-    iconUrl:       'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-    shadowUrl:     'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+  const container = document.getElementById('map');
+  map = new kakao.maps.Map(container, {
+    center: new kakao.maps.LatLng(37.5665, 126.9780),
+    level: 7,
   });
-  map = L.map('map', { zoomControl: false }).setView([37.5665, 126.9780], 13);
-  L.control.zoom({ position: 'topleft' }).addTo(map);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 19,
-  }).addTo(map);
-  map.on('click', onMapClick);
+  geocoder = new kakao.maps.services.Geocoder();
+  places   = new kakao.maps.services.Places();
+  kakao.maps.event.addListener(map, 'click', onMapClick);
+}
+
+function flyTo(lat, lng, level) {
+  map.setLevel(level);
+  map.panTo(new kakao.maps.LatLng(lat, lng));
 }
 
 // ═══════════════════════════════════════════════
@@ -522,21 +537,24 @@ async function loadPlaygrounds() {
   allPlaygrounds.forEach(addMarker);
 }
 
-function playgroundIcon() {
-  return L.divIcon({
-    html: `<div style="background:#FFD60A;border:3px solid #333;border-radius:50% 50% 50% 0;
-      width:34px;height:34px;transform:rotate(-45deg);box-shadow:3px 3px 0 rgba(0,0,0,.25);
-      display:flex;align-items:center;justify-content:center;pointer-events:all;cursor:pointer;">
-      <span style="transform:rotate(45deg);font-size:15px;line-height:1;pointer-events:none;">🛝</span>
-    </div>`,
-    className: 'custom-marker', iconSize: [34,34], iconAnchor: [17,34], popupAnchor: [0,-36],
-  });
+function playgroundMarkerEl(pg) {
+  const div = document.createElement('div');
+  div.style.cssText = `background:#FFD60A;border:3px solid #333;border-radius:50% 50% 50% 0;
+    width:34px;height:34px;transform:rotate(-45deg);box-shadow:3px 3px 0 rgba(0,0,0,.25);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;`;
+  div.innerHTML = `<span style="transform:rotate(45deg);font-size:15px;line-height:1;">🛝</span>`;
+  div.onclick = () => openDetailPanel(pg);
+  return div;
 }
 
 function addMarker(pg) {
-  const m = L.marker([pg.lat, pg.lng], { icon: playgroundIcon() })
-    .addTo(map).on('click', () => openDetailPanel(pg));
-  markersMap[pg.id] = m;
+  const overlay = new kakao.maps.CustomOverlay({
+    position: new kakao.maps.LatLng(pg.lat, pg.lng),
+    content: playgroundMarkerEl(pg),
+    yAnchor: 1,
+  });
+  overlay.setMap(map);
+  markersMap[pg.id] = overlay;
 }
 
 // ═══════════════════════════════════════════════
@@ -675,7 +693,7 @@ async function confirmDelete() {
   const { error } = await db.rpc('delete_playground', { p_id: pgId });
   if (error) { alert('삭제 중 오류가 발생했습니다.\n' + error.message); return; }
 
-  if (markersMap[pgId]) { markersMap[pgId].remove(); delete markersMap[pgId]; }
+  if (markersMap[pgId]) { markersMap[pgId].setMap(null); delete markersMap[pgId]; }
   allPlaygrounds = allPlaygrounds.filter(p => p.id !== pgId);
   closePanel();
 }
@@ -796,38 +814,38 @@ function closeRegisterModal() {
 }
 
 // ═══════════════════════════════════════════════
-// ADDRESS SEARCH (Nominatim)
+// ADDRESS SEARCH (Kakao Places)
 // ═══════════════════════════════════════════════
-async function searchAddress() {
+function searchAddress() {
   const q = document.getElementById('addr-search-input').value.trim();
   if (!q) return;
   const resultsEl = document.getElementById('addr-search-results');
   resultsEl.style.display = 'block';
   resultsEl.innerHTML = '<div class="addr-result-item" style="color:#999;">검색 중...</div>';
-  try {
-    const res  = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&accept-language=ko`);
-    const data = await res.json();
-    if (!data.length) { resultsEl.innerHTML = '<div class="addr-result-item" style="color:#999;">검색 결과가 없어요</div>'; return; }
+  places.keywordSearch(q, (data, status) => {
+    if (status !== kakao.maps.services.Status.OK || !data.length) {
+      resultsEl.innerHTML = '<div class="addr-result-item" style="color:#999;">검색 결과가 없어요</div>';
+      return;
+    }
+    lastAddrResults = data;
     resultsEl.innerHTML = data.map((item, i) => `
-      <div class="addr-result-item" onclick="selectAddrResult(${i})"
-           data-lat="${item.lat}" data-lng="${item.lon}" data-name="${item.display_name.replace(/"/g,"'")}">
-        📍 ${item.display_name}
+      <div class="addr-result-item" onclick="selectAddrResult(${i})">
+        📍 ${esc(item.place_name)} <span style="color:#999;">· ${esc(item.road_address_name || item.address_name)}</span>
       </div>`).join('');
-  } catch {
-    resultsEl.innerHTML = '<div class="addr-result-item" style="color:#E63946;">검색 오류가 발생했어요</div>';
-  }
+  });
 }
 
 function selectAddrResult(i) {
-  const item = document.querySelectorAll('#addr-search-results .addr-result-item')[i];
-  const lat  = parseFloat(item.dataset.lat);
-  const lng  = parseFloat(item.dataset.lng);
+  const item = lastAddrResults[i];
+  if (!item) return;
+  const lat = parseFloat(item.y);
+  const lng = parseFloat(item.x);
   document.getElementById('reg-lat').value     = lat;
   document.getElementById('reg-lng').value     = lng;
-  document.getElementById('reg-address').value = item.dataset.name;
+  document.getElementById('reg-address').value = item.road_address_name || item.address_name;
   document.getElementById('addr-search-input').value = '';
   hideAddrResults();
-  map.flyTo([lat, lng], 16);
+  flyTo(lat, lng, 3);
 }
 
 function hideAddrResults() {
@@ -842,33 +860,36 @@ function startLocationPicker() {
   document.getElementById('register-modal').classList.add('hidden');
   isPickingLoc = true;
   document.getElementById('location-picker').style.display = 'block';
-  map.getContainer().style.cursor = 'crosshair';
+  document.getElementById('map').style.cursor = 'crosshair';
 }
 
 function cancelLocationPicker() {
   isPickingLoc = false;
   document.getElementById('location-picker').style.display = 'none';
-  map.getContainer().style.cursor = '';
+  document.getElementById('map').style.cursor = '';
   document.getElementById('register-modal').classList.remove('hidden');
 }
 
-async function onMapClick(e) {
+function onMapClick(mouseEvent) {
   if (!isPickingLoc) return;
-  const { lat, lng } = e.latlng;
+  const latlng = mouseEvent.latLng;
+  const lat = latlng.getLat();
+  const lng = latlng.getLng();
   document.getElementById('reg-lat').value = lat;
   document.getElementById('reg-lng').value = lng;
   isPickingLoc = false;
   document.getElementById('location-picker').style.display = 'none';
-  map.getContainer().style.cursor = '';
+  document.getElementById('map').style.cursor = '';
   document.getElementById('register-modal').classList.remove('hidden');
   document.getElementById('reg-address').value = '주소 불러오는 중…';
-  try {
-    const res  = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ko`);
-    const data = await res.json();
-    document.getElementById('reg-address').value = data.display_name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-  } catch {
-    document.getElementById('reg-address').value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-  }
+  geocoder.coord2Address(lng, lat, (result, status) => {
+    if (status === kakao.maps.services.Status.OK && result[0]) {
+      const addr = result[0].road_address ? result[0].road_address.address_name : result[0].address.address_name;
+      document.getElementById('reg-address').value = addr;
+    } else {
+      document.getElementById('reg-address').value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+    }
+  });
 }
 
 // ═══════════════════════════════════════════════
@@ -963,7 +984,7 @@ async function handleRegister() {
   } else {
     allPlaygrounds.push(data);
     addMarker(data);
-    map.flyTo([lat, lng], 15);
+    flyTo(lat, lng, 4);
     openDetailPanel(data);
   }
 }
@@ -980,7 +1001,9 @@ function onSearchInput() {
   searchTimer = setTimeout(doSearch, 400);
 }
 
-async function doSearch() {
+let lastSearchAddrResults = [];
+
+function doSearch() {
   const q = document.getElementById('search-input').value.trim();
   if (!q) { hideSearchResults(); return; }
   const resultsEl = document.getElementById('search-results');
@@ -997,30 +1020,31 @@ async function doSearch() {
       <span>${pg.name} <span style="color:#aaa;font-size:12px;">· ${pg.address.split(',')[0]}</span></span>
     </div>`).join('');
 
-  try {
-    const res  = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=3&accept-language=ko&countrycodes=kr`);
-    const addr = await res.json();
-    html += addr.map(item => `
-      <div class="search-result-item" onclick="selectAddress(${item.lat},${item.lon})">
-        <span class="search-result-label" style="background:#EEF2FF;color:#4361EE;">주소</span>
-        <span>${item.display_name.split(',').slice(0,3).join(', ')}</span>
-      </div>`).join('');
-  } catch {}
-
-  resultsEl.innerHTML = html || '<div class="search-result-item" style="color:#999;">검색 결과가 없어요</div>';
+  places.keywordSearch(q, (data, status) => {
+    if (status === kakao.maps.services.Status.OK) {
+      lastSearchAddrResults = data.slice(0, 3);
+      html += lastSearchAddrResults.map((item, i) => `
+        <div class="search-result-item" onclick="selectAddress(${i})">
+          <span class="search-result-label" style="background:#EEF2FF;color:#4361EE;">주소</span>
+          <span>${esc(item.place_name)} <span style="color:#aaa;font-size:12px;">· ${esc(item.road_address_name || item.address_name)}</span></span>
+        </div>`).join('');
+    }
+    resultsEl.innerHTML = html || '<div class="search-result-item" style="color:#999;">검색 결과가 없어요</div>';
+  });
 }
 
 function selectPlayground(id) {
   hideSearchResults(); closeMobileSearch();
   document.getElementById('search-input').value = '';
   const pg = allPlaygrounds.find(p => p.id === id);
-  if (pg) { map.flyTo([pg.lat, pg.lng], 16); openDetailPanel(pg); }
+  if (pg) { flyTo(pg.lat, pg.lng, 3); openDetailPanel(pg); }
 }
 
-function selectAddress(lat, lng) {
+function selectAddress(i) {
   hideSearchResults(); closeMobileSearch();
   document.getElementById('search-input').value = '';
-  map.flyTo([parseFloat(lat), parseFloat(lng)], 15);
+  const item = lastSearchAddrResults[i];
+  if (item) flyTo(parseFloat(item.y), parseFloat(item.x), 4);
 }
 
 function hideSearchResults() {
@@ -1048,9 +1072,11 @@ document.addEventListener('click', e => {
 // ═══════════════════════════════════════════════
 // START
 // ═══════════════════════════════════════════════
-initMap();
-loadPlaygrounds();
-showSplash();
+kakao.maps.load(() => {
+  initMap();
+  loadPlaygrounds();
+  showSplash();
+});
 </script>
 
 <!-- ════════════ HELP MODAL ════════════ -->
