@@ -1072,11 +1072,19 @@ document.addEventListener('click', e => {
 // ═══════════════════════════════════════════════
 // START
 // ═══════════════════════════════════════════════
-kakao.maps.load(() => {
-  initMap();
-  loadPlaygrounds();
-  showSplash();
-});
+showSplash();
+try {
+  kakao.maps.load(() => {
+    try {
+      initMap();
+      loadPlaygrounds();
+    } catch (e) {
+      console.error('지도 초기화 실패:', e);
+    }
+  });
+} catch (e) {
+  console.error('카카오맵 SDK 로드 실패:', e);
+}
 </script>
 
 <!-- ════════════ HELP MODAL ════════════ -->
