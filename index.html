@@ -789,6 +789,7 @@ function openRegisterModal() {
 function openEditModal() {
   if (!selectedPG) return;
   editingPG = selectedPG;
+  if (markersMap[editingPG.id]) markersMap[editingPG.id].setMap(null);
   document.getElementById('reg-modal-title').textContent = '✏️ 놀이터 수정';
   document.getElementById('reg-submit-btn').textContent  = '수정 완료';
   document.getElementById('pwd-field-wrap').style.display = 'none';
@@ -809,6 +810,7 @@ function openEditModal() {
 }
 
 function closeRegisterModal() {
+  if (editingPG && markersMap[editingPG.id]) markersMap[editingPG.id].setMap(map);
   editingPG = null;
   document.getElementById('register-modal').classList.add('hidden');
   ['reg-nickname','reg-name','reg-address','reg-lat','reg-lng','reg-description','reg-password']
@@ -983,9 +985,10 @@ async function handleRegister() {
     return;
   }
 
+  const wasEditing = !!editingPG;
+  if (editingPG && markersMap[editingPG.id]) { markersMap[editingPG.id].setMap(null); delete markersMap[editingPG.id]; }
   closeRegisterModal();
-  if (editingPG) {
-    if (markersMap[data.id]) { markersMap[data.id].setMap(null); delete markersMap[data.id]; }
+  if (wasEditing) {
     allPlaygrounds = allPlaygrounds.map(p => p.id === data.id ? data : p);
     addMarker(data);
     openDetailPanel(data);
