@@ -374,7 +374,8 @@
 
     <!-- Images -->
     <div style="margin-bottom:12px;">
-      <label style="font-size:13px;font-weight:700;display:block;margin-bottom:8px;">사진 (최대 5장)</label>
+      <label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px;">사진 (최대 5장)</label>
+      <p style="font-size:11px;color:#aaa;margin-bottom:8px;line-height:1.5;">초상권 보호를 위해 사람의 얼굴이 찍힌 사진은 업로드하지 않도록 주의해주세요.</p>
       <input type="file" id="reg-images" accept="image/*" multiple style="display:none;" onchange="handleImageSelect(event)" />
       <div id="image-previews" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;"></div>
       <button class="crayon-btn" style="font-size:13px;padding:6px 14px;" onclick="document.getElementById('reg-images').click()">📷 사진 추가</button>
@@ -984,7 +985,9 @@ async function handleRegister() {
 
   closeRegisterModal();
   if (editingPG) {
+    if (markersMap[data.id]) { markersMap[data.id].setMap(null); delete markersMap[data.id]; }
     allPlaygrounds = allPlaygrounds.map(p => p.id === data.id ? data : p);
+    addMarker(data);
     openDetailPanel(data);
   } else {
     allPlaygrounds.push(data);
