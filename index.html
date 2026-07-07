@@ -74,8 +74,59 @@
       width: 60px; height: 60px; box-shadow: 4px 4px 0 #333;
       font-size: 28px; display: flex; align-items: center; justify-content: center;
       cursor: pointer; transition: transform .1s, box-shadow .1s;
+      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
     }
+    #fab:hover { transform: translateY(-2px); box-shadow: 4px 6px 0 #333; }
     #fab:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 #333; }
+
+    .map-round-btn {
+      position: fixed; z-index: 1000;
+      width: 60px; height: 60px; border-radius: 50%;
+      background: white; border: 2.5px solid #333;
+      box-shadow: 4px 4px 0 #333;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: #333;
+      transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    }
+    .map-round-btn:hover { transform: translateY(-2px); box-shadow: 4px 6px 0 #333; background: #FFFDF7; }
+    .map-round-btn:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 #333; }
+
+    #current-location-btn {
+      bottom: 24px; right: 24px;
+      font-size: 25px;
+    }
+    #current-location-btn.locating {
+      color: #4361EE;
+      pointer-events: none;
+    }
+    #help-btn {
+      bottom: 96px; right: 28px;
+      width: 38px; height: 38px;
+      box-shadow: 2px 2px 0 #333;
+      font-family: 'Jua', sans-serif; font-size: 16px; font-weight: 700;
+      color: #555;
+    }
+    #logo-link {
+      position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+      z-index: 1000; display: block;
+      width: 60px; height: 60px; border-radius: 50%; overflow: hidden;
+      box-shadow: 2px 2px 8px rgba(0,0,0,.18); background: transparent;
+    }
+    #logo-link img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; }
+
+    .current-location-dot {
+      width: 20px; height: 20px; border-radius: 50%;
+      background: #2F80ED; border: 3px solid white;
+      box-shadow: 0 2px 8px rgba(47,128,237,.45), 0 0 0 7px rgba(47,128,237,.18);
+    }
+
+    @media (max-width: 640px) {
+      #fab { bottom: 22px; left: 18px; }
+      #current-location-btn { bottom: 22px; right: 18px; }
+      #help-btn { bottom: 94px; right: 28px; }
+      #logo-link { bottom: 18px; width: 56px; height: 56px; }
+    }
 
     /* ── Detail Panel ── */
     #detail-panel {
@@ -255,9 +306,7 @@
       padding: 5px 10px; border: 2px solid #ddd; border-radius: 20px;
     }
     label.check-label:has(input:checked) { border-color: #FF6B35; background: #FFF0EA; }
-  
-#locate-btn{position:fixed;right:18px;bottom:90px;z-index:1000;width:48px;height:48px;border:none;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.25);cursor:pointer;font-size:22px;}
-</style>
+  </style>
 </head>
 <body>
 
@@ -309,6 +358,7 @@
 
 <!-- ════════════ FAB ════════════ -->
 <button id="fab" onclick="openRegisterModal()" title="놀이터 등록">+</button>
+<button id="current-location-btn" class="map-round-btn" onclick="handleCurrentLocationClick()" title="현재 위치">📍</button>
 
 <!-- ════════════ DETAIL PANEL ════════════ -->
 <div id="panel-backdrop" onclick="closePanel()"></div>
@@ -488,6 +538,8 @@ let panelLoading    = false;
 let allPlaygrounds  = [];
 let pendingAction   = 'edit'; // 'edit' | 'delete'
 let lastAddrResults = [];
+let currentLocationMarker = null;
+let currentAccuracyCircle = null;
 const markersMap    = {};     // id → Kakao CustomOverlay
 
 // ═══════════════════════════════════════════════
@@ -528,16 +580,103 @@ function initMap() {
   geocoder = new kakao.maps.services.Geocoder();
   places   = new kakao.maps.services.Places();
   kakao.maps.event.addListener(map, 'click', onMapClick);
-  document.getElementById('locate-btn').addEventListener('click', locateMe);
 }
-
-
-let currentLocationMarker=null;
-function locateMe(){if(!navigator.geolocation){alert("위치 서비스를 지원하지 않습니다.");return;}navigator.geolocation.getCurrentPosition(pos=>{const ll=new kakao.maps.LatLng(pos.coords.latitude,pos.coords.longitude);map.panTo(ll);map.setLevel(3);if(currentLocationMarker)currentLocationMarker.setMap(null);currentLocationMarker=new kakao.maps.Marker({position:ll,map});},()=>alert("현재 위치를 가져올 수 없습니다."),{enableHighAccuracy:true});}
 
 function flyTo(lat, lng, level) {
   map.setLevel(level);
   map.panTo(new kakao.maps.LatLng(lat, lng));
+}
+
+// ═══════════════════════════════════════════════
+// CURRENT LOCATION
+// ═══════════════════════════════════════════════
+function setCurrentLocationLoading(isLoading) {
+  const btn = document.getElementById('current-location-btn');
+  if (!btn) return;
+  btn.classList.toggle('locating', isLoading);
+}
+
+function clearCurrentLocationOverlay() {
+  if (currentLocationMarker) {
+    currentLocationMarker.setMap(null);
+    currentLocationMarker = null;
+  }
+  if (currentAccuracyCircle) {
+    currentAccuracyCircle.setMap(null);
+    currentAccuracyCircle = null;
+  }
+}
+
+function updateCurrentLocationOverlay(lat, lng, accuracy) {
+  if (!map || !window.kakao?.maps) return;
+  const position = new kakao.maps.LatLng(lat, lng);
+
+  clearCurrentLocationOverlay();
+
+  const markerEl = document.createElement('div');
+  markerEl.className = 'current-location-dot';
+  markerEl.setAttribute('aria-label', '현재 위치');
+
+  currentLocationMarker = new kakao.maps.CustomOverlay({
+    position,
+    content: markerEl,
+    xAnchor: 0.5,
+    yAnchor: 0.5,
+    zIndex: 20,
+  });
+  currentLocationMarker.setMap(map);
+
+  currentAccuracyCircle = new kakao.maps.Circle({
+    center: position,
+    radius: Math.max(accuracy || 30, 15),
+    strokeWeight: 1,
+    strokeColor: '#2F80ED',
+    strokeOpacity: 0.45,
+    fillColor: '#2F80ED',
+    fillOpacity: 0.16,
+  });
+  currentAccuracyCircle.setMap(map);
+
+  return position;
+}
+
+function requestCurrentLocation({ pan = true, silent = false } = {}) {
+  if (!navigator.geolocation) {
+    if (!silent) alert('이 브라우저에서는 위치 서비스를 사용할 수 없어요.');
+    return;
+  }
+
+  setCurrentLocationLoading(true);
+  navigator.geolocation.getCurrentPosition(
+    ({ coords }) => {
+      const position = updateCurrentLocationOverlay(coords.latitude, coords.longitude, coords.accuracy);
+      if (pan && position) map.panTo(position);
+      setCurrentLocationLoading(false);
+    },
+    (err) => {
+      setCurrentLocationLoading(false);
+      if (!silent) {
+        const message = err.code === err.PERMISSION_DENIED
+          ? '위치 서비스를 허용해야 현재 위치를 확인할 수 있어요.'
+          : '현재 위치를 가져오지 못했어요. 잠시 후 다시 시도해주세요.';
+        alert(message);
+      }
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+}
+
+function handleCurrentLocationClick() {
+  requestCurrentLocation({ pan: true });
+}
+
+function initCurrentLocationIfAllowed() {
+  if (!navigator.permissions || !navigator.geolocation) return;
+  navigator.permissions.query({ name: 'geolocation' })
+    .then((permission) => {
+      if (permission.state === 'granted') requestCurrentLocation({ pan: false, silent: true });
+    })
+    .catch(() => {});
 }
 
 // ═══════════════════════════════════════════════
@@ -1096,6 +1235,7 @@ try {
     try {
       initMap();
       loadPlaygrounds();
+      initCurrentLocationIfAllowed();
     } catch (e) {
       console.error('지도 초기화 실패:', e);
     }
@@ -1136,6 +1276,14 @@ try {
         </ul>
       </div>
 
+      <div style="background:#EEF2FF;border:2px solid #2F80ED;border-radius:12px;padding:14px;">
+        <p style="font-family:'Jua',sans-serif;font-size:15px;margin-bottom:6px;">📍 현재 위치</p>
+        <p style="margin:0;">
+          현재 위치 버튼을 누르면 내 위치를 확인하고 지도가 해당 위치로 이동해요.<br>
+          위치 서비스를 허용해야 이용할 수 있어요.
+        </p>
+      </div>
+
       <div style="background:#F5FFF5;border:2px solid #4CAF50;border-radius:12px;padding:14px;">
         <p style="font-family:'Jua',sans-serif;font-size:15px;margin-bottom:6px;">✏️ 수정 · 🗑️ 삭제</p>
         <ul style="padding-left:18px;margin:0;display:flex;flex-direction:column;gap:4px;">
@@ -1171,21 +1319,12 @@ try {
 
 <!-- ════════════ HELP BUTTON ════════════ -->
 <button onclick="document.getElementById('help-modal').classList.remove('hidden')"
-  style="position:fixed;bottom:94px;right:16px;z-index:1000;
-         width:36px;height:36px;border-radius:50%;
-         background:white;border:2.5px solid #333;
-         box-shadow:2px 2px 0 #333;
-         font-family:'Jua',sans-serif;font-size:16px;font-weight:700;
-         cursor:pointer;display:flex;align-items:center;justify-content:center;color:#555;"
+  id="help-btn" class="map-round-btn"
   title="이용 방법">?</button>
 
 <a href="https://jaechaeachoo.notion.site/341862bbe6f6801d8d25ea121db08f4e" target="_blank" rel="noopener"
-   style="position:fixed;bottom:16px;right:16px;z-index:1000;display:block;
-          width:60px;height:60px;border-radius:50%;overflow:hidden;
-          box-shadow:2px 2px 8px rgba(0,0,0,.18);background:transparent;">
-  <img src="logo.png" alt="로고"
-       style="width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply;" />
+   id="logo-link">
+  <img src="logo.png" alt="로고" />
 </a>
-<button id="locate-btn" title="현재 위치">📍</button>
 </body>
 </html>
