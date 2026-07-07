@@ -255,7 +255,9 @@
       padding: 5px 10px; border: 2px solid #ddd; border-radius: 20px;
     }
     label.check-label:has(input:checked) { border-color: #FF6B35; background: #FFF0EA; }
-  </style>
+  
+#locate-btn{position:fixed;right:18px;bottom:90px;z-index:1000;width:48px;height:48px;border:none;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.25);cursor:pointer;font-size:22px;}
+</style>
 </head>
 <body>
 
@@ -526,7 +528,12 @@ function initMap() {
   geocoder = new kakao.maps.services.Geocoder();
   places   = new kakao.maps.services.Places();
   kakao.maps.event.addListener(map, 'click', onMapClick);
+  document.getElementById('locate-btn').addEventListener('click', locateMe);
 }
+
+
+let currentLocationMarker=null;
+function locateMe(){if(!navigator.geolocation){alert("위치 서비스를 지원하지 않습니다.");return;}navigator.geolocation.getCurrentPosition(pos=>{const ll=new kakao.maps.LatLng(pos.coords.latitude,pos.coords.longitude);map.panTo(ll);map.setLevel(3);if(currentLocationMarker)currentLocationMarker.setMap(null);currentLocationMarker=new kakao.maps.Marker({position:ll,map});},()=>alert("현재 위치를 가져올 수 없습니다."),{enableHighAccuracy:true});}
 
 function flyTo(lat, lng, level) {
   map.setLevel(level);
@@ -1179,5 +1186,6 @@ try {
   <img src="logo.png" alt="로고"
        style="width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply;" />
 </a>
+<button id="locate-btn" title="현재 위치">📍</button>
 </body>
 </html>
