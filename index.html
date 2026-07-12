@@ -427,17 +427,6 @@
         placeholder="확인이 필요한 내용을 알려주세요." style="resize:vertical;"></textarea>
     </div>
 
-    <div style="margin-bottom:14px;">
-      <label for="report-contact" style="font-size:13px;font-weight:700;display:block;margin-bottom:5px;">
-        답변받을 연락처 <span style="font-weight:400;color:#aaa;">(선택)</span>
-      </label>
-      <input id="report-contact" type="text" class="crayon-input" maxlength="200"
-        placeholder="이메일 또는 SNS 아이디" />
-      <p style="font-size:11px;color:#999;line-height:1.5;margin-top:5px;">
-        처리 결과에 대한 답변이 필요할 때만 입력해주세요.
-      </p>
-    </div>
-
     <div id="report-err" style="color:#E63946;font-size:13px;margin-bottom:9px;display:none;"></div>
     <button id="report-submit-btn" class="crayon-btn"
       style="background:#E63946;color:white;width:100%;" onclick="submitReport()">접수하기</button>
@@ -721,7 +710,6 @@ function openReportModal() {
   document.getElementById('report-playground-name').textContent = `🛝 ${selectedPG.name}`;
   document.getElementById('report-type').value = '';
   document.getElementById('report-content').value = '';
-  document.getElementById('report-contact').value = '';
   document.getElementById('report-err').style.display = 'none';
   document.getElementById('report-modal').classList.remove('hidden');
 }
@@ -734,7 +722,6 @@ async function submitReport() {
   if (!selectedPG) return;
   const type = document.getElementById('report-type').value;
   const content = document.getElementById('report-content').value.trim();
-  const contact = document.getElementById('report-contact').value.trim();
   const errEl = document.getElementById('report-err');
 
   if (!type || !content) {
@@ -751,8 +738,7 @@ async function submitReport() {
   const { error } = await db.from('reports').insert({
     playground_id: selectedPG.id,
     report_type: type,
-    content,
-    contact: contact || null
+    content
   });
 
   btn.disabled = false;
@@ -1266,7 +1252,10 @@ try {
         <p style="margin:0;">
           놀이터 정보 오류나 부적절한 게시물은 각 놀이터의
           <strong>정보 수정 · 신고</strong> 버튼으로 알려주세요.<br>
-          그 밖의 문의와 제안은 <strong>재채기 프로젝트 DM</strong>으로 보내주세요.
+          그 밖의 문의와 제안은
+          <a href="https://www.instagram.com/jaechae_achoo?igsh=MWd6cDZpc2xtazFjYQ%3D%3D&amp;utm_source=qr"
+             target="_blank" rel="noopener noreferrer"
+             style="color:#7B61FF;font-weight:700;">재채기 프로젝트 DM</a>으로 보내주세요.
         </p>
       </div>
 
