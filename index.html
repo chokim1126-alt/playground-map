@@ -74,59 +74,8 @@
       width: 60px; height: 60px; box-shadow: 4px 4px 0 #333;
       font-size: 28px; display: flex; align-items: center; justify-content: center;
       cursor: pointer; transition: transform .1s, box-shadow .1s;
-      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
     }
-    #fab:hover { transform: translateY(-2px); box-shadow: 4px 6px 0 #333; }
     #fab:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 #333; }
-
-    .map-round-btn {
-      position: fixed; z-index: 1000;
-      width: 60px; height: 60px; border-radius: 50%;
-      background: white; border: 2.5px solid #333;
-      box-shadow: 4px 4px 0 #333;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; color: #333;
-      transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
-      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
-    }
-    .map-round-btn:hover { transform: translateY(-2px); box-shadow: 4px 6px 0 #333; background: #FFFDF7; }
-    .map-round-btn:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 #333; }
-
-    #current-location-btn {
-      bottom: 24px; right: 24px;
-      font-size: 25px;
-    }
-    #current-location-btn.locating {
-      color: #4361EE;
-      pointer-events: none;
-    }
-    #help-btn {
-      bottom: 96px; right: 28px;
-      width: 38px; height: 38px;
-      box-shadow: 2px 2px 0 #333;
-      font-family: 'Jua', sans-serif; font-size: 16px; font-weight: 700;
-      color: #555;
-    }
-    #logo-link {
-      position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
-      z-index: 1000; display: block;
-      width: 60px; height: 60px; border-radius: 50%; overflow: hidden;
-      box-shadow: 2px 2px 8px rgba(0,0,0,.18); background: transparent;
-    }
-    #logo-link img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; }
-
-    .current-location-dot {
-      width: 20px; height: 20px; border-radius: 50%;
-      background: #2F80ED; border: 3px solid white;
-      box-shadow: 0 2px 8px rgba(47,128,237,.45), 0 0 0 7px rgba(47,128,237,.18);
-    }
-
-    @media (max-width: 640px) {
-      #fab { bottom: 22px; left: 18px; }
-      #current-location-btn { bottom: 22px; right: 18px; }
-      #help-btn { bottom: 94px; right: 28px; }
-      #logo-link { bottom: 18px; width: 56px; height: 56px; }
-    }
 
     /* ── Detail Panel ── */
     #detail-panel {
@@ -358,7 +307,6 @@
 
 <!-- ════════════ FAB ════════════ -->
 <button id="fab" onclick="openRegisterModal()" title="놀이터 등록">+</button>
-<button id="current-location-btn" class="map-round-btn" onclick="handleCurrentLocationClick()" title="현재 위치">📍</button>
 
 <!-- ════════════ DETAIL PANEL ════════════ -->
 <div id="panel-backdrop" onclick="closePanel()"></div>
@@ -446,6 +394,53 @@
 
     <div id="reg-err" style="color:#E63946;font-size:13px;margin-bottom:8px;display:none;"></div>
     <button class="crayon-btn" id="reg-submit-btn" style="background:#FF6B35;color:white;width:100%;" onclick="handleRegister()">등록하기</button>
+  </div>
+</div>
+
+<!-- ════════════ REPORT MODAL ════════════ -->
+<div id="report-modal" class="modal-overlay hidden">
+  <div class="modal-box" style="max-width:460px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h2 style="font-family:'Jua',sans-serif;font-size:1.2rem;">🚨 정보 수정 · 신고</h2>
+      <button onclick="closeReportModal()"
+              style="background:none;border:none;font-size:20px;cursor:pointer;color:#999;">✕</button>
+    </div>
+
+    <p id="report-playground-name" style="background:#FFF8E7;border:2px solid #FFD60A;border-radius:10px;
+      padding:9px 12px;font-size:13px;margin-bottom:14px;"></p>
+
+    <div style="margin-bottom:12px;">
+      <label for="report-type" style="font-size:13px;font-weight:700;display:block;margin-bottom:5px;">신고 유형</label>
+      <select id="report-type" class="crayon-input">
+        <option value="">선택해주세요</option>
+        <option value="closed">폐쇄되었거나 이용할 수 없어요</option>
+        <option value="incorrect_info">위치나 정보가 달라요</option>
+        <option value="inappropriate">부적절한 사진이나 내용이 있어요</option>
+        <option value="duplicate">중복으로 등록되어 있어요</option>
+        <option value="other">기타</option>
+      </select>
+    </div>
+
+    <div style="margin-bottom:12px;">
+      <label for="report-content" style="font-size:13px;font-weight:700;display:block;margin-bottom:5px;">자세한 내용</label>
+      <textarea id="report-content" class="crayon-input" rows="4" maxlength="1000"
+        placeholder="확인이 필요한 내용을 알려주세요." style="resize:vertical;"></textarea>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <label for="report-contact" style="font-size:13px;font-weight:700;display:block;margin-bottom:5px;">
+        답변받을 연락처 <span style="font-weight:400;color:#aaa;">(선택)</span>
+      </label>
+      <input id="report-contact" type="text" class="crayon-input" maxlength="200"
+        placeholder="이메일 또는 SNS 아이디" />
+      <p style="font-size:11px;color:#999;line-height:1.5;margin-top:5px;">
+        처리 결과에 대한 답변이 필요할 때만 입력해주세요.
+      </p>
+    </div>
+
+    <div id="report-err" style="color:#E63946;font-size:13px;margin-bottom:9px;display:none;"></div>
+    <button id="report-submit-btn" class="crayon-btn"
+      style="background:#E63946;color:white;width:100%;" onclick="submitReport()">접수하기</button>
   </div>
 </div>
 
@@ -538,8 +533,6 @@ let panelLoading    = false;
 let allPlaygrounds  = [];
 let pendingAction   = 'edit'; // 'edit' | 'delete'
 let lastAddrResults = [];
-let currentLocationMarker = null;
-let currentAccuracyCircle = null;
 const markersMap    = {};     // id → Kakao CustomOverlay
 
 // ═══════════════════════════════════════════════
@@ -585,98 +578,6 @@ function initMap() {
 function flyTo(lat, lng, level) {
   map.setLevel(level);
   map.panTo(new kakao.maps.LatLng(lat, lng));
-}
-
-// ═══════════════════════════════════════════════
-// CURRENT LOCATION
-// ═══════════════════════════════════════════════
-function setCurrentLocationLoading(isLoading) {
-  const btn = document.getElementById('current-location-btn');
-  if (!btn) return;
-  btn.classList.toggle('locating', isLoading);
-}
-
-function clearCurrentLocationOverlay() {
-  if (currentLocationMarker) {
-    currentLocationMarker.setMap(null);
-    currentLocationMarker = null;
-  }
-  if (currentAccuracyCircle) {
-    currentAccuracyCircle.setMap(null);
-    currentAccuracyCircle = null;
-  }
-}
-
-function updateCurrentLocationOverlay(lat, lng, accuracy) {
-  if (!map || !window.kakao?.maps) return;
-  const position = new kakao.maps.LatLng(lat, lng);
-
-  clearCurrentLocationOverlay();
-
-  const markerEl = document.createElement('div');
-  markerEl.className = 'current-location-dot';
-  markerEl.setAttribute('aria-label', '현재 위치');
-
-  currentLocationMarker = new kakao.maps.CustomOverlay({
-    position,
-    content: markerEl,
-    xAnchor: 0.5,
-    yAnchor: 0.5,
-    zIndex: 20,
-  });
-  currentLocationMarker.setMap(map);
-
-  currentAccuracyCircle = new kakao.maps.Circle({
-    center: position,
-    radius: Math.max(accuracy || 30, 15),
-    strokeWeight: 1,
-    strokeColor: '#2F80ED',
-    strokeOpacity: 0.45,
-    fillColor: '#2F80ED',
-    fillOpacity: 0.16,
-  });
-  currentAccuracyCircle.setMap(map);
-
-  return position;
-}
-
-function requestCurrentLocation({ pan = true, silent = false } = {}) {
-  if (!navigator.geolocation) {
-    if (!silent) alert('이 브라우저에서는 위치 서비스를 사용할 수 없어요.');
-    return;
-  }
-
-  setCurrentLocationLoading(true);
-  navigator.geolocation.getCurrentPosition(
-    ({ coords }) => {
-      const position = updateCurrentLocationOverlay(coords.latitude, coords.longitude, coords.accuracy);
-      if (pan && position) map.panTo(position);
-      setCurrentLocationLoading(false);
-    },
-    (err) => {
-      setCurrentLocationLoading(false);
-      if (!silent) {
-        const message = err.code === err.PERMISSION_DENIED
-          ? '위치 서비스를 허용해야 현재 위치를 확인할 수 있어요.'
-          : '현재 위치를 가져오지 못했어요. 잠시 후 다시 시도해주세요.';
-        alert(message);
-      }
-    },
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-  );
-}
-
-function handleCurrentLocationClick() {
-  requestCurrentLocation({ pan: true });
-}
-
-function initCurrentLocationIfAllowed() {
-  if (!navigator.permissions || !navigator.geolocation) return;
-  navigator.permissions.query({ name: 'geolocation' })
-    .then((permission) => {
-      if (permission.state === 'granted') requestCurrentLocation({ pan: false, silent: true });
-    })
-    .catch(() => {});
 }
 
 // ═══════════════════════════════════════════════
@@ -787,6 +688,10 @@ function renderDetail(pg) {
         </div>` : ''}
       </div>
 
+      <button style="font-family:'Jua',sans-serif;font-size:12px;padding:7px 12px;width:100%;
+        border:2px solid #E63946;border-radius:10px;background:#FFF0F0;color:#C62828;cursor:pointer;"
+        onclick="openReportModal()">🚨 정보 수정 · 신고</button>
+
       <hr class="section-divider" />
       <h3 style="font-family:'Jua',sans-serif;font-size:1rem;margin-bottom:12px;">💬 댓글</h3>
 
@@ -806,6 +711,62 @@ function switchImg(el, url) {
   document.getElementById('main-img').src = url;
   document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════
+// REPORTS
+// ═══════════════════════════════════════════════
+function openReportModal() {
+  if (!selectedPG) return;
+  document.getElementById('report-playground-name').textContent = `🛝 ${selectedPG.name}`;
+  document.getElementById('report-type').value = '';
+  document.getElementById('report-content').value = '';
+  document.getElementById('report-contact').value = '';
+  document.getElementById('report-err').style.display = 'none';
+  document.getElementById('report-modal').classList.remove('hidden');
+}
+
+function closeReportModal() {
+  document.getElementById('report-modal').classList.add('hidden');
+}
+
+async function submitReport() {
+  if (!selectedPG) return;
+  const type = document.getElementById('report-type').value;
+  const content = document.getElementById('report-content').value.trim();
+  const contact = document.getElementById('report-contact').value.trim();
+  const errEl = document.getElementById('report-err');
+
+  if (!type || !content) {
+    errEl.textContent = '신고 유형과 자세한 내용을 입력해주세요.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const btn = document.getElementById('report-submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;margin:0 auto;"></div>';
+  errEl.style.display = 'none';
+
+  const { error } = await db.from('reports').insert({
+    playground_id: selectedPG.id,
+    report_type: type,
+    content,
+    contact: contact || null
+  });
+
+  btn.disabled = false;
+  btn.textContent = '접수하기';
+
+  if (error) {
+    console.error('신고 접수 실패:', error);
+    errEl.textContent = '접수 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  closeReportModal();
+  alert('신고가 접수되었습니다. 확인 후 처리할게요. 감사합니다!');
 }
 
 // ═══════════════════════════════════════════════
@@ -1235,7 +1196,6 @@ try {
     try {
       initMap();
       loadPlaygrounds();
-      initCurrentLocationIfAllowed();
     } catch (e) {
       console.error('지도 초기화 실패:', e);
     }
@@ -1276,14 +1236,6 @@ try {
         </ul>
       </div>
 
-      <div style="background:#EEF2FF;border:2px solid #2F80ED;border-radius:12px;padding:14px;">
-        <p style="font-family:'Jua',sans-serif;font-size:15px;margin-bottom:6px;">📍 현재 위치</p>
-        <p style="margin:0;">
-          현재 위치 버튼을 누르면 내 위치를 확인하고 지도가 해당 위치로 이동해요.<br>
-          위치 서비스를 허용해야 이용할 수 있어요.
-        </p>
-      </div>
-
       <div style="background:#F5FFF5;border:2px solid #4CAF50;border-radius:12px;padding:14px;">
         <p style="font-family:'Jua',sans-serif;font-size:15px;margin-bottom:6px;">✏️ 수정 · 🗑️ 삭제</p>
         <ul style="padding-left:18px;margin:0;display:flex;flex-direction:column;gap:4px;">
@@ -1309,6 +1261,15 @@ try {
         </p>
       </div>
 
+      <div style="background:#F7F3FF;border:2px solid #7B61FF;border-radius:12px;padding:14px;">
+        <p style="font-family:'Jua',sans-serif;font-size:15px;margin-bottom:6px;">🚨 문의 · 신고</p>
+        <p style="margin:0;">
+          놀이터 정보 오류나 부적절한 게시물은 각 놀이터의
+          <strong>정보 수정 · 신고</strong> 버튼으로 알려주세요.<br>
+          그 밖의 문의와 제안은 <strong>재채기 프로젝트 DM</strong>으로 보내주세요.
+        </p>
+      </div>
+
     </div>
 
     <p style="margin-top:16px;font-size:12px;color:#bbb;text-align:center;">
@@ -1319,12 +1280,20 @@ try {
 
 <!-- ════════════ HELP BUTTON ════════════ -->
 <button onclick="document.getElementById('help-modal').classList.remove('hidden')"
-  id="help-btn" class="map-round-btn"
+  style="position:fixed;bottom:94px;right:16px;z-index:1000;
+         width:36px;height:36px;border-radius:50%;
+         background:white;border:2.5px solid #333;
+         box-shadow:2px 2px 0 #333;
+         font-family:'Jua',sans-serif;font-size:16px;font-weight:700;
+         cursor:pointer;display:flex;align-items:center;justify-content:center;color:#555;"
   title="이용 방법">?</button>
 
 <a href="https://jaechaeachoo.notion.site/341862bbe6f6801d8d25ea121db08f4e" target="_blank" rel="noopener"
-   id="logo-link">
-  <img src="logo.png" alt="로고" />
+   style="position:fixed;bottom:16px;right:16px;z-index:1000;display:block;
+          width:60px;height:60px;border-radius:50%;overflow:hidden;
+          box-shadow:2px 2px 8px rgba(0,0,0,.18);background:transparent;">
+  <img src="logo.png" alt="로고"
+       style="width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply;" />
 </a>
 </body>
 </html>
