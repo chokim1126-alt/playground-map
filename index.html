@@ -502,6 +502,35 @@ function esc(str) {
     .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
+// 욕설/부적절한 언어 1차 차단
+const BLOCKED_WORDS = [
+  '시발', '씨발', 'ㅅㅂ', 'ㅆㅂ',
+  '병신', '븅신', 'ㅂㅅ',
+  '개새끼', '개새', '썅', '존나', '졸라',
+  '좆', '좃', '염병', '지랄', 'ㅈㄹ',
+  '닥쳐', '꺼져', '뒤져', '죽어',
+  '미친년', '미친놈',
+  '창녀', '걸레',
+  '보지', '자지', '섹스', 'sex',
+  '강간', '성폭행',
+  '카지노', '토토', '바카라', '성인사이트', '대출문의'
+];
+
+function normalizeBlockedText(text) {
+  return String(text || '')
+    .toLowerCase()
+    .replace(/[\s.,!?'"`~@#$%^&*()[\]{}_=+\\|;:\/<>-]/g, '');
+}
+
+function findBlockedWord(...texts) {
+  const haystack = normalizeBlockedText(texts.join(' '));
+  return BLOCKED_WORDS.find(word => haystack.includes(normalizeBlockedText(word))) || '';
+}
+
+function blockedLanguageMessage() {
+  return '욕설이나 부적절한 표현이 포함되어 있어 등록할 수 없어요.';
+}
+
 // 이미지 로드 실패 → 🛝 플레이스홀더
 window.imgErr = function(el) {
   el.onerror = null;
@@ -860,6 +889,10 @@ async function submitComment() {
   const nickname = nickEl.value.trim() || '익명';
   const content  = input.value.trim();
   if (!content) return;
+  if (findBlockedWord(nickname, content)) {
+    alert(blockedLanguageMessage());
+    return;
+  }
 
   // 즉시 화면에 표시 (낙관적 업데이트)
   input.value = '';
@@ -1058,6 +1091,9 @@ async function handleRegister() {
 
   if (!name || !address || isNaN(lat) || isNaN(lng)) {
     errEl.textContent = '이름과 위치는 필수입니다.'; errEl.style.display = 'block'; return;
+  }
+  if (findBlockedWord(nickname, name, desc)) {
+    errEl.textContent = blockedLanguageMessage(); errEl.style.display = 'block'; return;
   }
 
   const features = [...document.querySelectorAll('input[name="feat"]:checked')].map(el => el.value);
